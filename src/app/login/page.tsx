@@ -1,15 +1,44 @@
 "use client";
 
 import Link from "next/link";
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/services/supabase/client";
 
 export default function LoginPage() {
+  const [isLoading, setIsLoding] = useState(false);
+  const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    const values = Object.fromEntries(formData);
+
+    const supabase = createClient();
+
+    setIsLoding(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: values.email as string,
+      password: values.password as string,
+    });
+    setIsLoding(false);
+
+    if (error) {
+      console.error(error.message);
+      alert(error.message);
+      setErrorMessage("이메일 또는 비밀번호가 틀렸습니다");
+      return;
+    }
+    router.push("/");
+  };
   return (
     <main className="flex h-full justify-center flex min-h-screen flex-col items-center bg-[#f6f8fd] px-4 py-8 text-[#082d57]">
       <section className="relative w-full max-w-[580px] overflow-hidden rounded-2xl bg-white px-6 pb-8 pt-9 shadow-[0_8px_18px_rgba(8,45,87,0.12)] sm:px-9">
         {/* 상단 초록 라인 */}
         <div className="absolute inset-x-0 top-0 h-1.5 bg-[#082d57]" />
 
-        <form className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label
               htmlFor="email"
@@ -20,6 +49,7 @@ export default function LoginPage() {
 
             <input
               id="email"
+              name="email"
               type="email"
               placeholder="name@example.com"
               className="h-14 w-full rounded-md border border-[#bfc2ca] bg-[#f8f9fd] px-4 text-base text-[#082d57] outline-none placeholder:text-[#7b8290] focus:border-[#006c4a] focus:ring-2 focus:ring-[#006c4a]/20"
@@ -46,6 +76,7 @@ export default function LoginPage() {
             <input
               id="password"
               type="password"
+              name="password"
               placeholder="••••••••"
               className="h-14 w-full rounded-md border border-[#bfc2ca] bg-[#f8f9fd] px-4 text-base text-[#082d57] outline-none placeholder:text-[#7b8290] focus:border-[#006c4a] focus:ring-2 focus:ring-[#006c4a]/20"
             />

@@ -1,6 +1,7 @@
 "use client";
-
-import { useState } from "react";
+import { FormEvent, useState } from "react";
+import { createClient } from "@/services/supabase/client";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   CheckCircle2,
@@ -36,6 +37,40 @@ const roles = [
 ];
 
 export default function SignUpPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const values = Object.fromEntries(formData);
+    const supabase = createClient();
+    setIsLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: values.email as string,
+      password: values.password as string,
+      options: {
+        data: {
+          full_name: values.fullName as string,
+          phone: values.phone as string,
+          role: selectedRole, // "tenant" | "landlord" | "realtor"
+        },
+      },
+    });
+    setIsLoading(false);
+    if (!values.checkbox) {
+      alert("약관에 동의해주세요.");
+      return;
+    }
+
+    if (error) {
+      console.error("회원가입 실패", error.message);
+      return;
+    }
+    router.push("/login");
+    console.log("회원가입 성공", data);
+    console.log("파인너츠", values, selectedRole);
+  };
+
   const [selectedRole, setSelectedRole] = useState<UserRole>("tenant");
 
   return (
@@ -94,7 +129,7 @@ export default function SignUpPage() {
         <div className="mx-auto my-7 h-0.5 w-4 bg-[#ee82c8]" />
 
         {/* 가입 폼 */}
-        <form className="space-y-5">
+        <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
             <label
               htmlFor="fullName"
@@ -105,6 +140,7 @@ export default function SignUpPage() {
 
             <input
               id="fullName"
+              name="fullName"
               type="text"
               placeholder="Enter your full name"
               className="h-12 w-full rounded-md border border-[#9ca3af] px-4 text-base outline-none placeholder:text-[#8b909c] focus:border-[#006c4a] focus:ring-2 focus:ring-[#006c4a]/15"
@@ -122,6 +158,7 @@ export default function SignUpPage() {
 
               <input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="name@example.com"
                 className="h-12 w-full rounded-md border border-[#9ca3af] px-4 text-base outline-none placeholder:text-[#8b909c] focus:border-[#006c4a] focus:ring-2 focus:ring-[#006c4a]/15"
@@ -139,17 +176,11 @@ export default function SignUpPage() {
               <div className="flex gap-2">
                 <input
                   id="phone"
+                  name="phone"
                   type="tel"
                   placeholder="010-1234-5678"
                   className="h-12 min-w-0 flex-1 rounded-md border border-[#9ca3af] px-4 text-base outline-none placeholder:text-[#8b909c] focus:border-[#006c4a] focus:ring-2 focus:ring-[#006c4a]/15"
                 />
-
-                <button
-                  type="button"
-                  className="h-12 shrink-0 rounded-md bg-[#e6eeff] px-4 text-sm font-medium text-[#082d57] transition hover:bg-[#d5e3ff]"
-                >
-                  Verify
-                </button>
               </div>
             </div>
           </div>
@@ -164,6 +195,7 @@ export default function SignUpPage() {
 
             <input
               id="password"
+              name="password"
               type="password"
               placeholder="Create a strong password"
               className="h-12 w-full rounded-md border border-[#9ca3af] px-4 text-base outline-none placeholder:text-[#8b909c] focus:border-[#006c4a] focus:ring-2 focus:ring-[#006c4a]/15"
@@ -184,6 +216,7 @@ export default function SignUpPage() {
             <label className="flex cursor-pointer items-start gap-3 text-sm text-[#565b66]">
               <input
                 type="checkbox"
+                name="checkbox"
                 className="mt-0.5 size-5 rounded border-[#9ca3af] accent-[#006c4a]"
               />
 
@@ -211,7 +244,7 @@ export default function SignUpPage() {
             type="submit"
             className="h-14 w-full rounded-lg bg-[#082d57] text-lg font-semibold text-white transition hover:bg-[#006c4a] active:scale-[0.99]"
           >
-            Create Account
+            {isLoading ? "가입 처리 중..." : "Create Account"}
           </button>
         </form>
       </section>

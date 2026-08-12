@@ -1,15 +1,23 @@
 "use client";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { useAuth } from "@/context/auth-context";
+import { createClient } from "@/services/supabase/client";
 
 export default function Header() {
   const [keyword, setKeyword] = useState("");
+  const user = useAuth();
+  const supabase = createClient();
+
+  const handleLogout = () => {
+    supabase.auth.signOut();
+  };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
   };
 
-  const login = () => {};
+  console.log("로그인", user);
 
   return (
     <header className="bg-[#f8f9ff] opacity-80">
@@ -57,10 +65,17 @@ export default function Header() {
           </ul>
           <div className="bar" />
           <div className="flex gap-2">
-            <Link href="/login" className="login-button">
-              로그인
-            </Link>
-            <button>회원가입</button>
+            {user ? (
+              <button onClick={handleLogout} className="login-button">
+                로그아웃
+              </button>
+            ) : (
+              <>
+                <Link href="/login" className="login-button">
+                  로그인
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
