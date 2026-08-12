@@ -1,0 +1,41 @@
+.swiper-slide {
+  width: 260px;
+  border-radius: 6px;
+  border: solid 1px #c4c6cf;
+  overflow: hidden;
+}
+.label-card {
+  position: absolute;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #006c4a;
+  top: 10px;
+  left: 10px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.label-card2 {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: solid 1px #006c4a;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 108, 74, 0.1);
+  color: #006c4a;
+}
+.font-card > img {
+  width: 128px;
+}
+.font-card {
+  border-radius: 8px;
+  border: solid 1px #c4c6cf;
+  padding: 16px;
+}
+.card-info {
+  display: flex;
+  flex-direction: column;
+}

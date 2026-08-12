@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+header {
+  border-bottom: 1px solid #c4c6cf;
+}
+.bar {
+  display: block;
+  width: 1px;
+  height: 12px;
+  background: #c4c6cf;
+}
+.header-menu a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #6b7280;
+  transition:
+    color 0.25s ease,
+    font-weight 0.25s ease;
+}
+
+.header-menu a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  width: 100%;
+  height: 2px;
+  background: var(--foreground);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0;
+  transition:
+    transform 0.28s ease,
+    opacity 0.28s ease,
+    background-color 0.28s ease;
+}
+
+.header-menu a:hover,
+.header-menu a.active {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.header-menu a:hover::after,
+.header-menu a.active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280;
+  font-weight: 400;
+  opacity: 1;
+}
+footer {
+  background: #002045;
+}
