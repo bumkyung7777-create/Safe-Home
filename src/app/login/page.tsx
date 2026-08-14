@@ -9,13 +9,12 @@ export default function LoginPage() {
   const [isLoading, setIsLoding] = useState(false);
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const supabase = createClient();
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
     const values = Object.fromEntries(formData);
-
-    const supabase = createClient();
 
     setIsLoding(true);
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -32,6 +31,25 @@ export default function LoginPage() {
     }
     router.push("/");
   };
+
+  const kakao = () => {
+    supabase.auth.signInWithOAuth({ provider: "kakao" });
+  };
+
+  const handleNaverLogin = () => {
+    const state = crypto.randomUUID();
+    document.cookie = `naver_oauth_state=${state}; path=/; max-age=600`;
+
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: process.env.NEXT_PUBLIC_NAVER_CLIENT_ID!,
+      redirect_uri: `${window.location.origin}/auth/naver/callback`,
+      state,
+    });
+
+    window.location.href = `https://nid.naver.com/oauth2.0/authorize?${params.toString()}`;
+  };
+
   return (
     <main className="flex h-full justify-center flex min-h-screen flex-col items-center bg-[#f6f8fd] px-4 py-8 text-[#082d57]">
       <section className="relative w-full max-w-[580px] overflow-hidden rounded-2xl bg-white px-6 pb-8 pt-9 shadow-[0_8px_18px_rgba(8,45,87,0.12)] sm:px-9">
@@ -107,6 +125,7 @@ export default function LoginPage() {
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
+            onClick={kakao}
             className="flex h-12 items-center justify-center gap-2 rounded-md border border-[#c4c7cf] bg-white text-base font-medium text-[#082d57] transition hover:bg-[#fee500]/10"
           >
             <span className="flex size-7 items-center justify-center rounded-full bg-[#fee500] text-xs font-bold text-[#3b2d00]">
@@ -117,6 +136,7 @@ export default function LoginPage() {
 
           <button
             type="button"
+            onClick={handleNaverLogin}
             className="flex h-12 items-center justify-center gap-2 rounded-md border border-[#c4c7cf] bg-white text-base font-medium text-[#082d57] transition hover:bg-[#03c75a]/10"
           >
             <span className="flex size-7 items-center justify-center rounded bg-[#03c75a] text-xs font-bold text-white">
