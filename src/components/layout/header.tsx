@@ -17,7 +17,9 @@ export default function Header() {
     e.preventDefault();
   };
 
-  console.log("로그인", user);
+  const role = user?.user_metadata?.role;
+
+  console.log("로그인", role);
 
   return (
     <header className="bg-[#f8f9ff] opacity-80">
@@ -48,11 +50,13 @@ export default function Header() {
         </form>
         <div className="flex gap-5 flex items-center">
           <ul className="header-menu flex items-center gap-4">
-            <li>
-              <Link className="active" href="/mypage">
-                매물
-              </Link>
-            </li>
+            {role === "landlord" && (
+              <li>
+                <Link className="" href="/join">
+                  매물 등록
+                </Link>
+              </li>
+            )}
             <li>
               <Link href="/mypage">사용자</Link>
             </li>

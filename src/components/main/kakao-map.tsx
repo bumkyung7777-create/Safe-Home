@@ -1,11 +1,15 @@
 import Link from "next/link";
 import type { RoomList } from "@/types/property";
-export default function KakaoMap({ roomList }: { roomList: RoomList }) {
+import KakaoMap from "@/components/kakaoMap";
+export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
   return (
     <div className="bg-[#f8f9ff]">
       <ul className="flex max-w-[80.63rem] m-auto px-5 pt-5 pb-10 gap-6">
         <li className="flex-1">
-          <img src="/map.png" alt="" />
+          <div className="flex items-center justify-between pb-6">
+            <p>매물 정보</p>
+          </div>
+          <KakaoMap latitude={37.5665} longitude={126.978} level={3} />
         </li>
         <li className="flex-1">
           <div className="flex items-center justify-between pb-6">

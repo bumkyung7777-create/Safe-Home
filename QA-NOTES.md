@@ -519,3 +519,40 @@ TypeError: (0 , _context_auth_context__WEBPACK_IMPORTED_MODULE_3__.useAuth) is n
 6. **(선택) 로그아웃 후 페이지 이동** — 보호된 페이지에 있었다면 메인으로 보내는 게 자연스러움. `useRouter()`의 `router.push("/")`를 `signOut()` 다음 줄에 추가
 
 **정리**: Context + 리스너 패턴을 미리 만들어둔 덕분에, 로그아웃 버튼 쪽 코드는 "Supabase에 로그아웃 요청 보내기"만 하면 되고, 화면 갱신은 Context가 알아서 처리함.
+
+---
+
+## 17. user 객체에서 role 꺼내서 조건부 버튼 만들기
+
+### role은 어디 들어있나?
+
+콘솔에 `user`를 찍어보면 `identities[0].identity_data.role`에도 값이 보이지만, 더 쉬운 자리가 따로 있음 — **`user.user_metadata`**.
+
+이유: 회원가입 때 `signUp()`의 `options.data`로 넘긴 값(`full_name`, `phone`, `role`)을 Supabase가 `user.user_metadata`에 그대로 복사해줌. `identities[0].identity_data`는 "어떤 로그인 수단(이메일/카카오 등)으로 가입했는지"별 원본 데이터라 배열 인덱싱이 필요하지만, `user_metadata`는 바로 접근 가능한 요약본이라 훨씬 간단함.
+
+```tsx
+const role = user?.user_metadata?.role;
+```
+
+`user`가 로그아웃 상태면 `null`일 수 있으므로 `?.`(옵셔널 체이닝) 필수.
+
+### `&&`로 조건부 렌더링하는 이유 (삼항연산자와 차이)
+
+```tsx
+{role === "landlord" && <li>매물 등록</li>}
+```
+
+| | 삼항연산자 `? :` | `&&` |
+|---|---|---|
+| 언제 쓰나 | 참/거짓 **둘 다** 보여줄 게 있을 때 | 참일 때만 보여주고, 거짓이면 **아무것도 안 보여줄** 때 |
+| 예시 | `role === "landlord" ? <A/> : <B/>` | `role === "landlord" && <A/>` |
+
+`role === "landlord" && <li>...</li>`는 사실 `role === "landlord" ? <li>...</li> : null`을 줄여 쓴 것과 동일함. React는 `null`/`false`/`undefined`를 화면에 그리라고 하면 그냥 "아무것도 안 그림"으로 처리하기 때문.
+
+**동작 원리**: `&&`는 왼쪽이 거짓이면 오른쪽은 보지도 않고 왼쪽 값을 그대로 반환하고, 왼쪽이 참이면 오른쪽 값을 반환하는 자바스크립트 연산자. `role === "landlord"`는 결과가 항상 `true`/`false`인 비교식이라, 거짓일 때 `false`가 반환되고 React가 그걸 안 그림.
+
+> ⚠️ **함정 주의**: 왼쪽에 숫자를 그대로 쓰면(`{count && <li>...</li>}`) `count`가 `0`일 때 falsy라서 `&&`가 `0`을 그대로 반환하는데, React는 `0`을 "안 그림"이 아니라 **화면에 진짜 0을 그려버림**. `===` 비교식처럼 결과가 항상 boolean인 경우엔 이 함정이 없음.
+
+### TypeScript 관련 참고
+
+`user.user_metadata`는 Supabase 타입 정의상 `{ [key: string]: any }`라서 `.role`을 써도 자동완성/타입 체크가 안 됨. 지금은 그냥 써도 동작엔 문제없지만, 나중에 정확한 타입을 원하면 `role`을 `"tenant" | "landlord" | "realtor"`로 캐스팅(`as`)해서 쓰는 방법도 있음.
