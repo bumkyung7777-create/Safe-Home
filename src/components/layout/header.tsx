@@ -3,14 +3,16 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { createClient } from "@/services/supabase/client";
-
+import { useRouter } from "next/navigation";
 export default function Header() {
   const [keyword, setKeyword] = useState("");
   const user = useAuth();
   const supabase = createClient();
+  const router = useRouter();
 
   const handleLogout = () => {
     supabase.auth.signOut();
+    router.push("/");
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -10,6 +10,9 @@ import {
   Plus,
   Search,
 } from "lucide-react";
+import { createClient } from "@/services/supabase/client";
+import { useAuth } from "@/context/auth-context";
+import type { PropertyRecord } from "@/types/property";
 
 type ListingStatus = "review" | "published" | "private";
 
@@ -73,21 +76,33 @@ const LISTINGS: Listing[] = [
 ];
 
 export default function JoinList() {
+  const supabase = createClient();
+  const user = useAuth();
+  const [properties, setProperties] = useState<PropertyRecord[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [activeFilter, setActiveFilter] = useState<"all" | ListingStatus>(
     "all",
   );
   const [keyword, setKeyword] = useState("");
 
-  const filteredListings = LISTINGS.filter((listing) => {
-    const matchesFilter =
-      activeFilter === "all" || listing.status === activeFilter;
-    const matchesKeyword =
-      !keyword.trim() ||
-      listing.title.toLowerCase().includes(keyword.trim().toLowerCase()) ||
-      listing.address.toLowerCase().includes(keyword.trim().toLowerCase());
+  const getProducts = async (ownerId: string) => {
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("owner_id", ownerId);
 
-    return matchesFilter && matchesKeyword;
-  });
+    if (data) {
+      console.log("properties data:", data);
+      setProperties(data);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      getProducts(user.id);
+    }
+  }, [user]);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
@@ -152,31 +167,35 @@ export default function JoinList() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredListings.map((listing) => (
+        {properties.map((listing) => (
           <div
             key={listing.id}
             className="overflow-hidden rounded-xl border bg-white"
           >
             <div className="relative h-40 bg-gradient-to-br from-slate-200 to-slate-300">
-              {listing.status === "published" && (
-                <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Verified
-                </span>
-              )}
-              {listing.status === "review" && (
-                <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
-                  <Clock className="h-3.5 w-3.5" />
-                  Under Review
-                </span>
+              {listing.thumbnail_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={listing.thumbnail_url}
+                  alt={listing.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                  이미지 없음
+                </div>
               )}
             </div>
 
             <div className="p-4">
               <h3 className="font-semibold text-[#002045]">{listing.title}</h3>
+              <p className="mt-1 flex items-center gap-1 text-sm text-black-300">
+                {listing.description}
+              </p>
               <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
-                <MapPin className="h-3.5 w-3.5" />
                 {listing.address}
+                <br />
+                {listing.sub_address}
               </p>
 
               <div className="mt-3 flex items-center justify-between">

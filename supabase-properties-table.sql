@@ -13,6 +13,8 @@ create table if not exists public.properties (
   address text not null,
   sub_address text,
   zonecode text,
+  latitude double precision,
+  longitude double precision,
   building_type text not null,
   total_floor integer,
   current_floor integer,
@@ -46,6 +48,16 @@ create policy "properties_select_own"
   on public.properties for select
   to authenticated
   using (auth.uid() = owner_id);
+
+-- [테스트용] 메인페이지에서 "전체 공개"로 모든 매물을 볼 수 있게 하는 정책
+-- using (true) = 조건 없이 항상 허용 -> 로그인 여부 상관없이 누구나 전체 행을 볼 수 있음
+-- 나중에 승인 플로우를 만들면 이 정책을 지우고
+-- using (status = 'published') 조건으로 바꾸면 됩니다.
+drop policy if exists "properties_select_public_all" on public.properties;
+create policy "properties_select_public_all"
+  on public.properties for select
+  to public
+  using (true);
 
 drop policy if exists "properties_insert_own" on public.properties;
 create policy "properties_insert_own"
@@ -108,3 +120,11 @@ create policy "property_images_delete_own"
 -- =========================================================
 alter table public.properties add column if not exists thumbnail_url text;
 alter table public.properties add column if not exists detail_image_urls text[] not null default '{}';
+
+-- =========================================================
+-- properties 테이블을 좌표 컬럼 없는 상태로 이미 만들었다면
+-- 아래 두 줄도 실행해서 컬럼을 추가해 주세요. (이미 있으면 무시됨)
+-- 지도에 매물 핀을 찍기 위한 위도(latitude)/경도(longitude) 저장용입니다.
+-- =========================================================
+alter table public.properties add column if not exists latitude double precision;
+alter table public.properties add column if not exists longitude double precision;

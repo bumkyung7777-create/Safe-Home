@@ -6,6 +6,7 @@ import { ImagePlus, X } from "lucide-react";
 import DaumPostcodeEmbed, { type Address } from "react-daum-postcode";
 import { createClient } from "@/services/supabase/client";
 import { useAuth } from "@/context/auth-context";
+import Script from "next/script";
 type PropertyForm = {
   title: string;
   address: string;
@@ -56,6 +57,54 @@ const BUILDING_TYPES = ["아파트", "오피스텔", "빌라/다세대", "단독
 const DEAL_TYPES = ["전세", "월세", "매매"];
 const INCLUDED_ITEMS = ["전기", "가스", "수도", "인터넷", "TV", "청소비"];
 const PROPERTY_IMAGES_BUCKET = "property-images";
+
+function waitForKakaoServices(retries = 10, delayMs = 300): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (window.kakao?.maps?.services) {
+      resolve(true);
+      return;
+    }
+
+    if (retries <= 0) {
+      resolve(false);
+      return;
+    }
+
+    setTimeout(() => {
+      waitForKakaoServices(retries - 1, delayMs).then(resolve);
+    }, delayMs);
+  });
+}
+
+async function getCoordsFromAddress(address: string) {
+  const isReady = await waitForKakaoServices();
+
+  if (!isReady) {
+    console.log(
+      "지오코딩 실패: 카카오 지도 SDK 로드 대기 시간 초과 (3초)",
+    );
+    return null;
+  }
+
+  return new Promise<{ lat: number; lng: number } | null>((resolve) => {
+    // "(역삼동, OO빌딩)" 같은 괄호 부가정보는 지오코더가 못 알아듣는 경우가 많아서 떼고 검색
+    const cleanAddress = address.replace(/\s*\([^)]*\)\s*$/, "").trim();
+
+    const geocoder = new window.kakao.maps.services.Geocoder();
+
+    geocoder.addressSearch(cleanAddress, (result: any, status: string) => {
+      if (status === window.kakao.maps.services.Status.OK) {
+        resolve({
+          lat: Number(result[0].y),
+          lng: Number(result[0].x),
+        });
+      } else {
+        console.log("지오코딩 실패:", status, cleanAddress);
+        resolve(null);
+      }
+    });
+  });
+}
 
 async function uploadPropertyImage(
   supabase: ReturnType<typeof createClient>,
@@ -253,11 +302,15 @@ export default function Registration() {
         detailImageUrls.push(url);
       }
 
+      const coords = await getCoordsFromAddress(form.address);
+
       const { error } = await supabase.from("properties").insert({
         owner_id: user.id,
         address: form.address,
         sub_address: form.subAddress || null,
         zonecode: form.zonecode || null,
+        latitude: coords?.lat ?? null,
+        longitude: coords?.lng ?? null,
         building_type: form.type,
         total_floor: form.totalFloor ? Number(form.totalFloor) : null,
         current_floor: form.currentFloor ? Number(form.currentFloor) : null,
@@ -288,6 +341,26 @@ export default function Registration() {
 
   return (
     <div>
+      <Script
+        strategy="afterInteractive"
+        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&libraries=services&autoload=false`}
+        onLoad={() => {
+          console.log(
+            "카카오 SDK 키 설정 여부:",
+            Boolean(process.env.NEXT_PUBLIC_KAKAO_MAP_KEY),
+          );
+          console.log("카카오 스크립트 onLoad 실행됨, window.kakao:", window.kakao);
+          window.kakao?.maps?.load(() => {
+            console.log(
+              "kakao.maps.load 완료, services 존재?",
+              Boolean(window.kakao?.maps?.services),
+            );
+          });
+        }}
+        onError={(e) => {
+          console.log("카카오 스크립트 로드 자체가 실패함:", e);
+        }}
+      />
       <div className=" px-10  py-4 max-w-[80.63rem] m-auto mt-5">
         <h2 className="text-4xl text-[#002045] block pb-5 font-bold">
           매물 등록 (Property Registration)
