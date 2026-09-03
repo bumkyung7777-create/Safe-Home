@@ -53,7 +53,7 @@ export default function Header() {
             {role === "landlord" && (
               <li>
                 <Link className="" href="/join">
-                  매물 등록
+                  매물
                 </Link>
               </li>
             )}

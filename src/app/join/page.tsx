@@ -1,5 +1,5 @@
 "use client";
-import Registration from "@/components/join/registration";
+import JoinList from "@/components/join/joinList";
 export default function Join() {
-  return <Registration />;
+  return <JoinList />;
 }
