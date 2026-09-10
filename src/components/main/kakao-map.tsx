@@ -13,6 +13,7 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
     const { data, error } = await supabase.from("properties").select("*");
 
     if (data) {
+      
       setProperties(data);
     }
   };

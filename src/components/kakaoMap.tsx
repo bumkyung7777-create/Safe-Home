@@ -46,11 +46,23 @@ export default function KakaoMap({
   const mapObjRef = useRef<any>(null);
   const propertyMarkerObjsRef = useRef<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [center, setCenter] = useState({ lat: latitude, lng: longitude });
+  // 처음엔 위치를 모르는 상태(null)로 시작 — 시청/서울역 같은 기본 좌표를 아예 보여주지 않기 위함
+  const [center, setCenter] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
+
+  // 다른 페이지 갔다가 다시 돌아온 경우: 스크립트는 이미 로드돼 있는데
+  // 이 컴포넌트는 새로 마운트돼서 isLoaded가 false로 초기화된 상태일 수 있음
+  // → onLoad가 다시 안 불려도, 마운트될 때 한 번 직접 확인해서 잡아줌
+  useEffect(() => {
+    if (window.kakao?.maps) {
+      setIsLoaded(true);
+    }
+  }, []);
 
   // 지도 생성 & 중심 이동 (현재 위치 마커 포함)
   useEffect(() => {
-    if (!isLoaded || !mapRef.current || !window.kakao?.maps) return;
+    if (!isLoaded || !mapRef.current || !window.kakao?.maps || !center) return;
 
     window.kakao.maps.load(() => {
       const position = new window.kakao.maps.LatLng(center.lat, center.lng);
@@ -104,34 +116,57 @@ export default function KakaoMap({
     navigator.geolocation.getCurrentPosition(
       (position) => {
         // 성공: 진짜 현재 위치로 교체
+        console.log("현재 위치 가져오기 성공:", {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
         setCenter({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         });
       },
       (error) => {
-        // 실패(권한 거부 등): 그냥 시청 좌표 그대로 둠
-        console.log("위치 가져오기 실패", error);
+        // 실패(권한 거부 등): 이때만 기본 좌표(props로 받은 값)를 사용
+        // code: 1=권한 거부, 2=위치 확인 불가, 3=시간 초과
+        console.log("위치 가져오기 실패", {
+          code: error.code,
+          message: error.message,
+        });
+        setCenter({ lat: latitude, lng: longitude });
       },
     );
   }, []);
   return (
     <>
       <Script
-        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`}
+        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&libraries=services&autoload=false`}
         strategy="afterInteractive"
         onLoad={() => setIsLoaded(true)}
       />
 
-      <div
-        ref={mapRef}
-        style={{
-          width: "100%",
-          height: "calc(100% - 45px)",
-          borderRadius: "12px",
-          border: "solid 1px #c4c6cf",
-        }}
-      />
+      {center ? (
+        <div
+          ref={mapRef}
+          style={{
+            width: "100%",
+            height: "calc(100% - 45px)",
+            borderRadius: "12px",
+            border: "solid 1px #c4c6cf",
+          }}
+        />
+      ) : (
+        <div
+          className="flex items-center justify-center text-sm text-gray-400"
+          style={{
+            width: "100%",
+            height: "calc(100% - 45px)",
+            borderRadius: "12px",
+            border: "solid 1px #c4c6cf",
+          }}
+        >
+          현재 위치를 확인하고 있어요...
+        </div>
+      )}
     </>
   );
 }

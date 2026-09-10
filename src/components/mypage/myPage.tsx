@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   ShieldCheck,
   User,
@@ -138,10 +139,10 @@ const TIERS = [
 ];
 
 const PROPERTY_FILTERS: { value: "all" | PropertyStatus; label: string }[] = [
-  { value: "all", label: "전체 (12)" },
-  { value: "labeled", label: "라벨링 인증완료 (8)" },
-  { value: "review", label: "심사중 (3)" },
-  { value: "private", label: "비공개 (1)" },
+  { value: "all", label: "전체" },
+  { value: "labeled", label: "라벨링 인증완료" },
+  { value: "review", label: "심사중" },
+  { value: "private", label: "비공개" },
 ];
 
 const PROPERTIES: {
@@ -150,8 +151,8 @@ const PROPERTIES: {
   type: string;
   status: PropertyStatus;
   image: string;
-  labelBadge: string;
-  labelIcon: typeof ShieldCheck;
+  // 매물 하나당 최대 3개까지만 보여줌 (렌더링할 때 .slice(0, 3)으로 제한)
+  labels: { text: string; icon: typeof ShieldCheck }[];
   safeScore?: number;
   boosted?: boolean;
   priceLine: string;
@@ -165,10 +166,7 @@ const PROPERTIES: {
     status: "labeled",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCot6cQ825XCqMQT9HBh3Eh3e4PRy49mVemjnKWqO1jOyZsbKh6pk13DXXeDQwdcI3ruzyifXDPitsv2eSU9nNXqw5NxJdxXfc0Bj002ea1uhRI2in0O2gitMN61nN3fG9yUw-keRweHO2d_iUCblL_gSdAfFSf6VevFXKqYp1WLhIeVRnsdzrwjmPo34KzBQ9mhW1VqIq1966875Z_-c5dpMVVS8p4rrZO_i3IeP6w043cZx_9eBRiDg",
-    labelBadge: "HUG 안심라벨",
-    labelIcon: ShieldCheck,
-    safeScore: 98,
-    boosted: true,
+    labels: [{ text: "HUG 안심라벨", icon: ShieldCheck }],
     priceLine:
       "전세 2억 5,000만 · 전용 54.2㎡ (16.4평) · 보증금 반환보증 가입완료",
     noteLine: "최근 등기 변동 확인: 오늘 11:30 (무결성 검증됨)",
@@ -181,9 +179,7 @@ const PROPERTIES: {
     status: "labeled",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuAVnneUNQvRuDLgUpywcXPWqDTyezclZDfXQIlRFUXK1p89gz0fC6u8P-R8wa7ZyG1s6iZawSV68nUMja4S13cLXB9aKH_q2Pwd0O20FM0WYQLTTHsXlkRFQ9jFz2VQ0NvluG0l11bxDgMlxL_HZ-C7hrsZibNVbACMqlV4lW6XI2viqDUdwNR89wNNfDw02O9bMZcYuvJkD_8qHi_syOf_GEKHybfqWlNG-JtsFKMEhi3I-QfN5LTt9A",
-    labelBadge: "HF 주택보증라벨",
-    labelIcon: Landmark,
-    safeScore: 95,
+    labels: [{ text: "HF 주택보증라벨", icon: Landmark }],
     priceLine: "월세 1억 / 70만 · 전용 68.1㎡ (20.6평) · 선순위 근저당 0원",
     noteLine: "실시간 안심 임대차 계약서 자동 작성 가능",
     noteTone: "default",
@@ -195,8 +191,10 @@ const PROPERTIES: {
     status: "review",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuD-7ceJERcBnIbfIfjXVxU-oqTa691ehdZy8eoC2k0FOkv_S9Q3ZpTtNkeTRS_Xsua9dlg9Js3LpA43wlFpK5RZJmCLy6tx0bPVHm29iVgLG9W4l5511kQA-BSS8hKKYLloJy4V37L1EHTDnpSoE78HEjBsk1S9uWX9o1a_jyThxZZV_m6WcTj6pqLmaqGdWbVbTto_a1E2PA455didPpcMFYkkMsLaid1cBOivSZ-VJCLDoCoa0BVh3w",
-    labelBadge: "라벨링 심사중 (서류검토 단계) · 진행률 65%",
-    labelIcon: RefreshCw,
+    labels: [
+      { text: "HF 주택보증라벨", icon: Landmark  },
+      { text: "SGI 보증라벨", icon: Shield },
+    ],
     priceLine:
       "전세 8억 5,000만 · 전용 84.9㎡ (25.7평) · 전담 심사관: 김도현 책임연구원",
     noteLine: "안내: 국세 완납증명서 최신본 보완 요청 접수됨",
@@ -204,7 +202,19 @@ const PROPERTIES: {
   },
 ];
 
+
 export default function MyPage() {
+
+
+  const statusCounts = PROPERTIES.reduce(
+  (counts, property) => {
+    counts[property.status] = (counts[property.status] ?? 0) + 1;
+    return counts;
+  },
+  {} as Record<PropertyStatus, number>,
+);
+
+
   const { role: accountRole, fullName, phone, createdAt, updatedAt } =
     useUserProfile();
   const [role, setRole] = useState<Role>(accountRole);
@@ -478,20 +488,16 @@ export default function MyPage() {
                 <ShieldCheck className="h-[18px] w-[18px]" />
                 <span className="text-sm font-bold">HUG 안심전세</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-[11px] font-bold uppercase">부여됨</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700">
                 <Landmark className="h-[18px] w-[18px]" />
                 <span className="text-sm font-bold">HF 주택금융보증</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-[11px] font-bold uppercase">부여됨</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 opacity-80">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700">
                 <Shield className="h-[18px] w-[18px]" />
-                <span className="text-sm font-bold">SGI 서울보증</span>
-                <span className="text-[11px] px-1.5 py-0.5 rounded bg-white text-[#002045] font-semibold">
-                  VIP 전용 즉시신청
-                </span>
+                <span className="text-sm font-bold">SGI 보증</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
               </div>
             </div>
           </div>
@@ -501,72 +507,7 @@ export default function MyPage() {
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* 좌측 컬럼 */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <div className="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-1">
-              <div className="px-3 py-2">
-                <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">
-                  My Account Management
-                </span>
-              </div>
-
-              <a
-                href="#profile"
-                className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-100 text-[#002045] text-sm font-bold"
-              >
-                <div className="flex items-center gap-3">
-                  <UserCog className="h-5 w-5" />
-                  <span>프로필 &amp; 회원 등급</span>
-                </div>
-                <ChevronRight className="h-[18px] w-[18px]" />
-              </a>
-
-              <a
-                href="#properties"
-                className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-[#002045] transition-colors text-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <Building2 className="h-5 w-5" />
-                  <span>{content.navPropertyText}</span>
-                </div>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-bold">
-                  12건
-                </span>
-              </a>
-
-              <a
-                href="#labels"
-                className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-[#002045] transition-colors text-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <FileCheck2 className="h-5 w-5" />
-                  <span>안심 라벨링 발급/결제 내역</span>
-                </div>
-                <ChevronRight className="h-[18px] w-[18px]" />
-              </a>
-
-              <a
-                href="#inquiries"
-                className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-[#002045] transition-colors text-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <MessagesSquare className="h-5 w-5" />
-                  <span>받은 문의 및 계약 현황</span>
-                </div>
-                <span className="px-2 py-0.5 rounded-full bg-[#002045]/10 text-[#002045] text-[11px] font-bold">
-                  5건
-                </span>
-              </a>
-
-              <a
-                href="#security"
-                className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-[#002045] transition-colors text-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <KeyRound className="h-5 w-5" />
-                  <span>보안 및 비밀번호 변경</span>
-                </div>
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              </a>
-            </div>
+            
 
             {/* 보안 및 비밀번호 변경 */}
             <div className="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-4">
@@ -626,24 +567,7 @@ export default function MyPage() {
                   />
                 </label>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 mt-1">
-                  <div className="flex flex-col">
-                    <span className="text-sm text-[#002045] font-bold">
-                      2단계 SMS 안전 인증 (2FA)
-                    </span>
-                    <span className="text-[11px] text-gray-500">
-                      매물 계약 및 라벨링 변경 시 필수
-                    </span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500" />
-                  </label>
-                </div>
+                
 
                 <button
                   type="submit"
@@ -664,20 +588,7 @@ export default function MyPage() {
                 </a>
               </div>
             </div>
-
-            {/* 무과실 보증 안내 */}
-            <div className="p-4 rounded-xl bg-gray-100 flex items-start gap-2">
-              <ShieldCheck className="h-6 w-6 text-emerald-500 flex-none" />
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm text-[#002045] font-bold">
-                  SafeHome 무과실 보증 체계
-                </span>
-                <span className="text-xs text-gray-500 leading-relaxed">
-                  라벨링 인증 매물에서 허위 권리 관계 또는 보증금 미반환 사고
-                  발생 시 기관 예치금으로 100% 우선 변제됩니다.
-                </span>
-              </div>
-            </div>
+            
           </div>
 
           {/* 우측 컬럼 */}
@@ -765,27 +676,32 @@ export default function MyPage() {
                 </div>
 
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                  {PROPERTY_FILTERS.map((filter) => (
-                    <button
-                      key={filter.value}
-                      type="button"
-                      onClick={() => setPropertyFilter(filter.value)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
-                        propertyFilter === filter.value
-                          ? "bg-[#002045] text-white shadow-sm"
-                          : "bg-gray-100 hover:bg-gray-200 text-gray-500"
-                      }`}
-                    >
-                      {filter.label}
-                    </button>
-                  ))}
+                  {PROPERTY_FILTERS.map((filter) => {
+                    const count =
+                      filter.value === "all"
+                        ? PROPERTIES.length
+                        : (statusCounts[filter.value] ?? 0);
+
+                    return (
+                      <button
+                        key={filter.value}
+                        type="button"
+                        onClick={() => setPropertyFilter(filter.value)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
+                          propertyFilter === filter.value
+                            ? "bg-[#002045] text-white shadow-sm"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-500"
+                        }`}
+                      >
+                        {filter.label} ({count})
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="flex flex-col gap-4">
                 {filteredProperties.map((property) => {
-                  const LabelIcon = property.labelIcon;
-
                   return (
                     <article
                       key={property.id}
@@ -806,10 +722,19 @@ export default function MyPage() {
 
                         <div className="flex flex-col gap-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[11px] font-bold flex items-center gap-1">
-                              <LabelIcon className="h-[13px] w-[13px]" />
-                              <span>{property.labelBadge}</span>
-                            </span>
+                            {property.labels.map((label) => {
+                              const LabelIcon = label.icon;
+
+                              return (
+                                <span
+                                  key={label.text}
+                                  className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[11px] font-bold flex items-center gap-1"
+                                >
+                                  <LabelIcon className="h-[13px] w-[13px]" />
+                                  <span>{label.text}</span>
+                                </span>
+                              );
+                            })}
                             {property.safeScore && (
                               <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[11px] font-bold">
                                 SafeScore {property.safeScore}점
@@ -851,14 +776,7 @@ export default function MyPage() {
                                 type="button"
                                 className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-600 text-sm font-semibold transition-colors"
                               >
-                                심사 취소
-                              </button>
-                              <button
-                                type="button"
-                                className="px-3 py-1.5 rounded-lg bg-[#002045] hover:bg-[#002045]/90 text-white text-sm font-bold shadow-sm transition-all flex items-center gap-1"
-                              >
-                                <Upload className="h-3.5 w-3.5" />
-                                <span>추가 서류 제출</span>
+                                심사 중
                               </button>
                             </>
                           ) : (
@@ -868,13 +786,6 @@ export default function MyPage() {
                                 className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-[#002045] text-sm font-semibold transition-colors"
                               >
                                 매물 수정
-                              </button>
-                              <button
-                                type="button"
-                                className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold shadow-sm transition-all flex items-center gap-1"
-                              >
-                                <Zap className="h-3.5 w-3.5" />
-                                <span>라벨링 업그레이드</span>
                               </button>
                             </>
                           )}
@@ -891,46 +802,15 @@ export default function MyPage() {
                 )}
               </div>
 
-              <button
-                type="button"
+              <Link
+                href="/join/registration"
                 className="w-full py-3.5 rounded-xl bg-[#002045] hover:bg-[#002045]/95 text-white text-base font-bold shadow-md transition-all flex items-center justify-center gap-2 group"
               >
                 <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Plus className="h-[18px] w-[18px]" />
                 </div>
                 <span>새 매물 등록하고 HUG/HF 안심 라벨링 받기</span>
-              </button>
-            </div>
-
-            {/* 무과실 보증 인증서 */}
-            <div className="p-4 md:p-6 rounded-xl bg-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500">
-                  <BarChart3 className="h-7 w-7" />
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base text-[#002045] font-bold">
-                      임대인 책임 보증제 자동 등록 완료
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[11px] font-bold">
-                      인증 번호: SH-2025-04829
-                    </span>
-                  </div>
-                  <span className="text-[13px] text-gray-500 mt-0.5">
-                    등록된 12개 매물 전체가 SafeHome 사기예방 알고리즘 및 3대
-                    공인기관 리스크 데이터베이스에 의해 실시간 감시됩니다.
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#002045] text-sm font-semibold transition-colors flex items-center gap-1 whitespace-nowrap self-stretch sm:self-auto justify-center"
-              >
-                <Download className="h-[18px] w-[18px]" />
-                <span>공식 인증서 PDF 다운로드</span>
-              </button>
+              </Link>
             </div>
           </div>
         </section>
