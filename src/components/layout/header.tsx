@@ -48,7 +48,8 @@ export default function Header() {
         </form>
         <div className="flex gap-5 flex items-center">
           <ul className="header-menu flex items-center gap-4">
-            {user && role === "landlord" && (
+            {/* 집주인(landlord) 또는 공인중개사(realtor)만 매물 메뉴 표시 */}
+            {user && (role === "landlord" || role === "realtor") && (
               <li>
                 <Link className="" href="/join">
                   매물
@@ -59,10 +60,7 @@ export default function Header() {
               <Link href="/mypage">내 정보</Link>
             </li>
             <li>
-              <Link href="/mypage">점수</Link>
-            </li>
-            <li>
-              <Link href="/mypage">시장</Link>
+              <Link href="/home">시장</Link>
             </li>
           </ul>
           <div className="bar" />

@@ -13,6 +13,7 @@ import {
 import { createClient } from "@/services/supabase/client";
 import { useAuth } from "@/context/auth-context";
 import type { PropertyRecord } from "@/types/property";
+import { formatPrice } from "@/utils/price";
 
 type ListingStatus = "review" | "published" | "private";
 
@@ -24,28 +25,36 @@ type Listing = {
   status: ListingStatus;
 };
 
-const STATS = [
+type StatKey = "total" | "review" | "published" | "rejected";
+
+// 카드 모양만 정의하고, 숫자는 컴포넌트 안의 statCounts에서 key로 꺼내 씀
+const STATS: {
+  key: StatKey;
+  label: string;
+  valueClassName: string;
+  cardClassName: string;
+}[] = [
   {
+    key: "total",
     label: "전체 매물",
-    value: 12,
     valueClassName: "text-[#002045]",
     cardClassName: "bg-white",
   },
   {
+    key: "review",
     label: "리뷰 등록",
-    value: 3,
     valueClassName: "text-amber-500",
     cardClassName: "bg-amber-50",
   },
   {
+    key: "published",
     label: "승인 완료",
-    value: 8,
     valueClassName: "text-green-600",
     cardClassName: "bg-green-50",
   },
   {
+    key: "rejected",
     label: "거부된 매물",
-    value: 1,
     valueClassName: "text-red-600",
     cardClassName: "bg-white",
   },
@@ -104,8 +113,17 @@ export default function JoinList() {
     }
   }, [user]);
 
+  // 전체 매물 = 내가 등록한 매물 수 (DB에서 불러온 properties 길이)
+  // TODO: 리뷰 등록 / 승인 완료 / 거부된 매물은 서비스 로직 만든 뒤 계산으로 교체
+  const statCounts: Record<StatKey, number> = {
+    total: properties.length,
+    review: 0,
+    published: 0,
+    rejected: 0,
+  };
+
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="mx-auto max-w-6xl px-6 py-8 min-h-[calc(100vh_-_199px)]">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#002045]">나의 매물</h1>
@@ -131,7 +149,7 @@ export default function JoinList() {
           >
             <p className="text-sm text-gray-500">{stat.label}</p>
             <p className={`mt-2 text-2xl font-bold ${stat.valueClassName}`}>
-              {stat.value}
+              {statCounts[stat.key]}
             </p>
           </div>
         ))}
@@ -200,7 +218,7 @@ export default function JoinList() {
 
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-lg font-bold text-[#002045]">
-                  {listing.price}
+                  {formatPrice(listing.price)}
                 </span>
 
                 <div className="flex items-center gap-2">

@@ -5,6 +5,7 @@ import { ChangeEvent, useMemo, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
 import DaumPostcodeEmbed, { type Address } from "react-daum-postcode";
 import { createClient } from "@/services/supabase/client";
+import { formatPrice } from "@/utils/price";
 import { useAuth } from "@/context/auth-context";
 import Script from "next/script";
 type PropertyForm = {
@@ -53,7 +54,7 @@ const initialForm: PropertyForm = {
   choice: [],
 };
 
-const BUILDING_TYPES = ["아파트", "오피스텔", "빌라/다세대", "단독/다가구"];
+const BUILDING_TYPES = ["아파트", "원룸", "빌라/투룸", "상가/사무실"];
 const DEAL_TYPES = ["전세", "월세", "매매"];
 const INCLUDED_ITEMS = ["전기", "가스", "수도", "인터넷", "TV", "청소비"];
 const PROPERTY_IMAGES_BUCKET = "property-images";
@@ -111,7 +112,10 @@ async function uploadPropertyImage(
   file: File,
   ownerId: string,
 ) {
-  const filePath = `${ownerId}/${crypto.randomUUID()}-${file.name}`;
+  // Supabase Storage는 경로에 한글·공백 등이 있으면 400 "Invalid key"로 거부함
+  // → 파일 이름은 버리고 UUID + 확장자만 사용
+  const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const filePath = `${ownerId}/${crypto.randomUUID()}${ext ? `.${ext}` : ""}`;
 
   const { error: uploadError } = await supabase.storage
     .from(PROPERTY_IMAGES_BUCKET)
@@ -361,7 +365,7 @@ export default function Registration() {
           console.log("카카오 스크립트 로드 자체가 실패함:", e);
         }}
       />
-      <div className=" px-10  py-4 max-w-[80.63rem] m-auto mt-5">
+      <div className=" px-10  py-4 max-w-[80.63rem] m-auto mt-5 min-h-[calc(100vh_-_219px)]" >
         <h2 className="text-4xl text-[#002045] block pb-5 font-bold">
           매물 등록 (Property Registration)
         </h2>
@@ -609,9 +613,15 @@ export default function Registration() {
                   className="w-full rounded-md border px-3 py-2 pr-12 text-right"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                  만원
+                  원
                 </span>
               </div>
+              {/* 입력한 숫자를 "7억 8,000만원"처럼 바로 보여줘서 0 개수 실수 방지 */}
+              {form.price && (
+                <span className="text-right text-sm font-medium text-[#002045]">
+                  {formatPrice(Number(form.price))}
+                </span>
+              )}
             </label>
 
             <div className="mt-6">

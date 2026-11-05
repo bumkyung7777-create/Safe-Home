@@ -13,6 +13,9 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+    console.error("카카오 세션 교환 실패", error.message);
+  } else {
+    console.error("콜백에 code 없음", request.url);
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth-callback-error`);

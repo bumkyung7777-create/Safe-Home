@@ -54,7 +54,8 @@ export async function GET(request: Request) {
 
   const supabase = createClient();
   const { error: verifyError } = await supabase.auth.verifyOtp({
-    type: "magiclink",
+    // "email"은 신규 가입(signup)·기존 회원(magiclink) 토큰을 모두 처리함
+    type: "email",
     token_hash: linkData.properties.hashed_token,
   });
 

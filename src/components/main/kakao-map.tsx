@@ -3,6 +3,8 @@ import type { RoomList } from "@/types/property";
 import KakaoMap from "@/components/kakaoMap";
 import { createClient } from "@/services/supabase/client";
 import type { PropertyRecord } from "@/types/property";
+import { formatPrice } from "@/utils/price";
+import { ChevronRight, MapPin } from "lucide-react";
 
 export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
   const [properties, setProperties] = useState<PropertyRecord[]>([]);
@@ -47,8 +49,16 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
     <div className="bg-[#f8f9ff]">
       <ul className="flex max-w-[80.63rem] m-auto px-5 pt-5 pb-10 gap-6">
         <li className="flex-1">
-          <div className="flex items-center justify-between pb-6">
-            <p>매물 정보</p>
+          {/* "금주의 검증된 매물" 제목(property.tsx)과 같은 스타일 */}
+          <div className="flex h-10 items-center justify-between mb-6">
+            <p className="flex items-center gap-[0.63rem]">
+              <span>
+                <img src="/title_icon.svg" alt="" />
+              </span>
+              <span className="text-xl leading-[normal] text-[#0b1c30]">
+                매물 정보
+              </span>
+            </p>
           </div>
           <KakaoMap
             latitude={37.5665}
@@ -58,8 +68,14 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
           />
         </li>
         <li className="flex-1">
-          <div className="flex items-center justify-between pb-6">
-            <p>총 24개</p>
+          <div className="flex h-10 items-center justify-between mb-6">
+            <p className="text-base text-slate-500">
+              총{" "}
+              <strong className="text-xl font-bold text-[#002045]">
+                {properties.length}
+              </strong>
+              개의 매물
+            </p>
             <div>
               <button>
                 <img src="/solt.svg" alt="" />
@@ -67,40 +83,70 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
               <div className="hidden">{/* solt 메뉴 */}</div>
             </div>
           </div>
-          <ul className="flex flex-col gap-6 h-[36.88rem] overflow-hidden">
-            {properties.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedId(item.id)}
-                  className={`flex font-card gap-4 w-full text-left ${
-                    item.id === selectedId
-                      ? "ring-2 ring-[#002045] rounded-md"
-                      : ""
-                  }`}
-                >
-                  {item.thumbnail_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.thumbnail_url}
-                      alt={item.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
-                      이미지 없음
+          <ul className="flex h-[36.88rem] flex-col gap-4 overflow-y-auto p-1 pr-2">
+            {properties.map((item) => {
+              const isSelected = item.id === selectedId;
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(item.id)}
+                    className={`group flex w-full gap-4 rounded-2xl border bg-white p-3 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+                      isSelected
+                        ? "border-[#002045] ring-2 ring-[#002045]/20"
+                        : "border-slate-200 hover:border-[#8eadd2]"
+                    }`}
+                  >
+                    {/* 썸네일 + 건물 유형 배지 */}
+                    <div className="relative h-28 w-36 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                      {item.thumbnail_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.thumbnail_url}
+                          alt={item.title}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                          이미지 없음
+                        </div>
+                      )}
+                      <span className="absolute left-2 top-2 rounded-md bg-[#002045]/80 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm">
+                        {item.building_type}
+                      </span>
                     </div>
-                  )}
-                  <div className="card-info">
-                    <p>
-                      <span>{item.price}</span>
-                    </p>
-                    <strong>{item.description}</strong>
-                    <p>주소 : {item.address}</p>
-                  </div>
-                </button>
-              </li>
-            ))}
+
+                    {/* 매물 정보 */}
+                    <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+                      <p className="flex items-center gap-2">
+                        {item.deal_type && (
+                          <span className="rounded-md bg-[#006c4a]/10 px-2 py-0.5 text-xs font-bold text-[#006c4a]">
+                            {item.deal_type}
+                          </span>
+                        )}
+                        <span className="text-xl font-extrabold tracking-tight text-[#002045]">
+                          {formatPrice(item.price)}
+                        </span>
+                      </p>
+                      <strong className="truncate font-semibold text-slate-800">
+                        {item.title}
+                      </strong>
+                      {item.description && (
+                        <p className="line-clamp-1 text-sm text-slate-500">
+                          {item.description}
+                        </p>
+                      )}
+                      <p className="mt-1 flex items-center gap-1 text-xs text-slate-400">
+                        <MapPin className="size-3.5 shrink-0" />
+                        <span className="truncate">{item.address}</span>
+                      </p>
+                    </div>
+
+                    <ChevronRight className="size-5 shrink-0 self-center text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[#002045]" />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </li>
       </ul>

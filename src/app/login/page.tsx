@@ -33,7 +33,10 @@ export default function LoginPage() {
   };
 
   const kakao = () => {
-    supabase.auth.signInWithOAuth({ provider: "kakao" });
+    supabase.auth.signInWithOAuth({
+      provider: "kakao",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
   };
 
   const handleNaverLogin = () => {
