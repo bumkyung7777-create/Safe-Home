@@ -3,7 +3,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  BadgeCheck,
   CheckCircle2,
+  ShieldCheck,
   Clock,
   MapPin,
   Pencil,
@@ -203,18 +205,49 @@ export default function JoinList() {
                   이미지 없음
                 </div>
               )}
+
+              {/* HUG / HF 인증 마크: true인 것만 사진 왼쪽 위에 표시 */}
+              {(listing.hug_mark || listing.hf_mark) && (
+                <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1.5">
+                  {listing.hug_mark && (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-[#006c4a] px-2 py-0.5 text-[11px] font-bold text-white shadow-sm">
+                      <ShieldCheck className="size-3.5" />
+                      HUG 인증
+                    </span>
+                  )}
+                  {listing.hf_mark && (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-[#002045] px-2 py-0.5 text-[11px] font-bold text-white shadow-sm">
+                      <BadgeCheck className="size-3.5" />
+                      HF 인증
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="p-4">
               <h3 className="font-semibold text-[#002045]">{listing.title}</h3>
-              <p className="mt-1 flex items-center gap-1 text-sm text-black-300">
-                {listing.description}
-              </p>
-              <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
-                {listing.address}
-                <br />
-                {listing.sub_address}
-              </p>
+              {/* 설명: 회색, 최대 2줄까지만 (넘치면 …) */}
+              {listing.description && (
+                <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-slate-500">
+                  {listing.description}
+                </p>
+              )}
+
+              {/* 주소: 연한 회색 상자 + 지도 핀 아이콘, 상세주소는 아랫줄에 작게 */}
+              <div className="mt-3 flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                <MapPin className="mt-0.5 size-4 shrink-0 text-[#006c4a]" />
+                <div className="min-w-0 text-sm">
+                  <p className="truncate font-medium text-slate-700">
+                    {listing.address}
+                  </p>
+                  {listing.sub_address && (
+                    <p className="truncate text-xs text-slate-400">
+                      {listing.sub_address}
+                    </p>
+                  )}
+                </div>
+              </div>
 
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-lg font-bold text-[#002045]">
@@ -222,18 +255,22 @@ export default function JoinList() {
                 </span>
 
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-full border text-gray-500"
+                  {/* 수정 페이지로 이동: 등록 화면을 이 매물 정보로 채워서 열어 줌 */}
+                  <Link
+                    href={`/join/edit/${listing.id}`}
+                    aria-label={`${listing.title} 수정하기`}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border text-gray-500 transition hover:border-[#002045] hover:text-[#002045]"
                   >
                     <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[#002045] text-white"
+                  </Link>
+                  {/* 상세 페이지로 이동: map 중인 매물의 id로 주소를 만듦 */}
+                  <Link
+                    href={`/product/${listing.id}`}
+                    aria-label={`${listing.title} 상세 보기`}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[#002045] text-white transition hover:bg-[#0b3c72]"
                   >
                     <ArrowRight className="h-4 w-4" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

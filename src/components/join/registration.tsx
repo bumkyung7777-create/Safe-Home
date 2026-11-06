@@ -1,7 +1,7 @@
 "use client";
 import "./join.css";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
 import DaumPostcodeEmbed, { type Address } from "react-daum-postcode";
 import { createClient } from "@/services/supabase/client";
@@ -132,13 +132,71 @@ async function uploadPropertyImage(
   return publicUrl;
 }
 
-export default function Registration() {
+// propertyId가 있으면 "수정 모드", 없으면 "등록 모드"
+export default function Registration({
+  propertyId,
+}: {
+  propertyId?: string;
+}) {
+  const isEdit = Boolean(propertyId);
   const router = useRouter();
   const user = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [form, setForm] = useState<PropertyForm>(initialForm);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // ── 수정 모드 전용 상태 ──
+  const [isLoading, setIsLoading] = useState(isEdit);
+  // 이미 Storage에 올라가 있는 사진 주소 (새로 고른 File과 따로 관리)
+  const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<
+    string | null
+  >(null);
+  const [existingDetailUrls, setExistingDetailUrls] = useState<string[]>([]);
+  // 주소가 바뀌었을 때만 좌표를 다시 계산하기 위해 원래 주소 기억
+  const [originalAddress, setOriginalAddress] = useState("");
+
+  // 수정 모드: 이 id의 매물을 불러와서 폼에 채워 넣기
+  useEffect(() => {
+    if (!propertyId || !user) return;
+    const supabase = createClient();
+
+    supabase
+      .from("properties")
+      .select("*")
+      .eq("id", propertyId)
+      .eq("owner_id", user.id) // 내 매물만 수정 가능
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error || !data) {
+          setErrorMessage("매물을 찾을 수 없거나 수정 권한이 없어요.");
+          setIsLoading(false);
+          return;
+        }
+
+        // DB 컬럼(snake_case) → 폼 값(camelCase, 문자열)으로 옮겨 담기
+        setForm({
+          ...initialForm,
+          title: data.title ?? "",
+          address: data.address ?? "",
+          subAddress: data.sub_address ?? "",
+          zonecode: data.zonecode ?? "",
+          type: data.building_type ?? "",
+          totalFloor: data.total_floor?.toString() ?? "",
+          currentFloor: data.current_floor?.toString() ?? "",
+          description: data.description ?? "",
+          dealType: data.deal_type ?? "전세",
+          price: data.price?.toString() ?? "",
+          managementFee: data.management_fee?.toString() ?? "",
+          noManagementFee: data.no_management_fee ?? false,
+          includedItems: data.included_items ?? [],
+        });
+        setExistingThumbnailUrl(data.thumbnail_url);
+        setExistingDetailUrls(data.detail_image_urls ?? []);
+        setOriginalAddress(data.address ?? "");
+        setIsLoading(false);
+      });
+  }, [propertyId, user]);
 
   const [isAddressSearchOpen, setIsAddressSearchOpen] = useState(false);
 
@@ -239,9 +297,13 @@ export default function Registration() {
     }));
   }
 
+  // 새로 고른 사진이 있으면 그 미리보기, 없으면 (수정 모드) 기존 사진
   const thumbnailPreview = useMemo(
-    () => (form.thumbnail ? URL.createObjectURL(form.thumbnail) : null),
-    [form.thumbnail],
+    () =>
+      form.thumbnail
+        ? URL.createObjectURL(form.thumbnail)
+        : existingThumbnailUrl,
+    [form.thumbnail, existingThumbnailUrl],
   );
 
   const detailImagePreviews = useMemo(
@@ -291,7 +353,8 @@ export default function Registration() {
     const supabase = createClient();
 
     try {
-      let thumbnailUrl: string | null = null;
+      // 새 사진을 안 골랐으면 기존 사진 유지 (등록 모드에서는 null)
+      let thumbnailUrl: string | null = existingThumbnailUrl;
       if (form.thumbnail) {
         thumbnailUrl = await uploadPropertyImage(
           supabase,
@@ -300,21 +363,17 @@ export default function Registration() {
         );
       }
 
-      const detailImageUrls: string[] = [];
+      // 남겨 둔 기존 사진 + 새로 올린 사진
+      const detailImageUrls: string[] = [...existingDetailUrls];
       for (const file of form.detailImages ?? []) {
         const url = await uploadPropertyImage(supabase, file, user.id);
         detailImageUrls.push(url);
       }
 
-      const coords = await getCoordsFromAddress(form.address);
-
-      const { error } = await supabase.from("properties").insert({
-        owner_id: user.id,
+      const values = {
         address: form.address,
         sub_address: form.subAddress || null,
         zonecode: form.zonecode || null,
-        latitude: coords?.lat ?? null,
-        longitude: coords?.lng ?? null,
         building_type: form.type,
         total_floor: form.totalFloor ? Number(form.totalFloor) : null,
         current_floor: form.currentFloor ? Number(form.currentFloor) : null,
@@ -327,13 +386,38 @@ export default function Registration() {
         management_fee: form.managementFee ? Number(form.managementFee) : null,
         no_management_fee: form.noManagementFee ?? false,
         included_items: form.includedItems ?? [],
-      });
+      };
+
+      // 좌표: 새로 등록하거나, 수정 모드에서 주소가 바뀐 경우에만 다시 계산
+      // (주소가 그대로면 latitude/longitude를 보내지 않아서 기존 값이 유지됨)
+      const addressChanged = !isEdit || form.address !== originalAddress;
+      const coordValues: { latitude?: number | null; longitude?: number | null } =
+        {};
+      if (addressChanged) {
+        const coords = await getCoordsFromAddress(form.address);
+        coordValues.latitude = coords?.lat ?? null;
+        coordValues.longitude = coords?.lng ?? null;
+      }
+
+      const { error } = isEdit
+        ? await supabase
+            .from("properties")
+            .update({
+              ...values,
+              ...coordValues,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", propertyId!)
+            .eq("owner_id", user.id)
+        : await supabase
+            .from("properties")
+            .insert({ ...values, ...coordValues, owner_id: user.id });
 
       if (error) {
         throw error;
       }
 
-      alert("매물이 등록되었습니다.");
+      alert(isEdit ? "매물이 수정되었습니다." : "매물이 등록되었습니다.");
       router.push("/join");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -367,7 +451,9 @@ export default function Registration() {
       />
       <div className=" px-10  py-4 max-w-[80.63rem] m-auto mt-5 min-h-[calc(100vh_-_219px)]" >
         <h2 className="text-4xl text-[#002045] block pb-5 font-bold">
-          매물 등록 (Property Registration)
+          {isEdit
+            ? "매물 수정 (Edit Property)"
+            : "매물 등록 (Property Registration)"}
         </h2>
         <p className="text-base text-[#43474E]">
           정확한 정보를 입력하여 높은 Safe Score를 획득하세요.
@@ -378,8 +464,13 @@ export default function Registration() {
             {errorMessage}
           </p>
         )}
+        {isLoading && (
+          <p className="mt-8 rounded-xl border px-10 py-10 text-center text-sm text-gray-400">
+            매물 정보를 불러오는 중...
+          </p>
+        )}
         {/* Step 1 */}
-        {currentStep === 1 && (
+        {!isLoading && currentStep === 1 && (
           <section className="mt-8 rounded-xl border  px-10  py-4 max-w-[80.63rem] m-auto">
             <div className="flex gap-3 rounded-lg bg-blue-50 p-4 text-blue-900">
               <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
@@ -542,6 +633,31 @@ export default function Registration() {
                 매물의 실내외 사진을 여러 장 등록해주세요.
               </p>
               <div className="mt-2 grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {/* (수정 모드) 이미 올라가 있는 사진: X로 빼면 저장할 때 목록에서 제외 */}
+                {existingDetailUrls.map((src, index) => (
+                  <div
+                    key={src}
+                    className="relative h-24 overflow-hidden rounded-lg border"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={src}
+                      alt={`기존 상세 이미지 ${index + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExistingDetailUrls((previous) =>
+                          previous.filter((url) => url !== src),
+                        )
+                      }
+                      className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
                 {detailImagePreviews.map((src, index) => (
                   <div
                     key={src}
@@ -699,10 +815,16 @@ export default function Registration() {
             <button
               type="button"
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || isLoading}
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              {isSaving ? "저장 중..." : "임시저장"}
+              {isEdit
+                ? isSaving
+                  ? "수정 중..."
+                  : "수정하기"
+                : isSaving
+                  ? "저장 중..."
+                  : "임시저장"}
             </button>
           )}
         </div>
