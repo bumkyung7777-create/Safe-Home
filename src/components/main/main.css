@@ -1,4 +1,6 @@
-.swiper-slide {
+/* .property-swiper 안의 슬라이드에만 적용 (상세 페이지 사진 슬라이드에는 영향 X)
+   클래스 2개 → Swiper 기본 CSS(.swiper-slide, 클래스 1개)보다 항상 우선 */
+.property-swiper .swiper-slide {
   width: 260px;
   border-radius: 6px;
   border: solid 1px #c4c6cf;

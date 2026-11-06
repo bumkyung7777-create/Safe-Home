@@ -20,6 +20,7 @@ export default function Property({ properties }: PropertyProps) {
         </p>
         <div className="swiper-container mt-3">
           <Swiper
+            className="property-swiper"
             loop={true}
             spaceBetween={10}
             slidesPerView="auto"
@@ -40,7 +41,7 @@ export default function Property({ properties }: PropertyProps) {
 
               return (
                 <SwiperSlide key={slide.id}>
-                  <Link href="/">
+                  <Link href={`/product/${slide.id}`}>
                     <div className="relative h-48">
                       <div className="label-card  text-[#fff]">
                         <img src="/card_label.svg" alt="" />

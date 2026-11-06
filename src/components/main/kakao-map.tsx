@@ -4,7 +4,8 @@ import KakaoMap from "@/components/kakaoMap";
 import { createClient } from "@/services/supabase/client";
 import type { PropertyRecord } from "@/types/property";
 import { formatPrice } from "@/utils/price";
-import { ChevronRight, MapPin } from "lucide-react";
+import { ArrowRight, ChevronRight, MapPin } from "lucide-react";
+import Link from "next/link";
 
 export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
   const [properties, setProperties] = useState<PropertyRecord[]>([]);
@@ -88,14 +89,21 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
               const isSelected = item.id === selectedId;
               return (
                 <li key={item.id}>
+                  {/* 카드 테두리는 바깥 div가 담당
+                      (button 안에 Link(a)를 넣을 수 없어서 둘을 형제로 나란히 둠) */}
+                  <div
+                    className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition duration-200 hover:shadow-lg ${
+                      isSelected
+                        ? "border-[#002045] ring-2 ring-[#002045]/20"
+                        : "border-slate-200 hover:-translate-y-0.5 hover:border-[#8eadd2]"
+                    }`}
+                  >
+                  {/* ① 카드 클릭 → 선택(지도 핀 빨간색) + 아래에 "상세 보기" 열림 */}
                   <button
                     type="button"
                     onClick={() => setSelectedId(item.id)}
-                    className={`group flex w-full gap-4 rounded-2xl border bg-white p-3 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-                      isSelected
-                        ? "border-[#002045] ring-2 ring-[#002045]/20"
-                        : "border-slate-200 hover:border-[#8eadd2]"
-                    }`}
+                    aria-expanded={isSelected}
+                    className="group flex w-full gap-4 p-3 text-left"
                   >
                     {/* 썸네일 + 건물 유형 배지 */}
                     <div className="relative h-28 w-36 shrink-0 overflow-hidden rounded-xl bg-slate-100">
@@ -142,8 +150,29 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
                       </p>
                     </div>
 
-                    <ChevronRight className="size-5 shrink-0 self-center text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[#002045]" />
+                    {/* 선택되면 화살표가 아래(⌄)로 돌아감 → "펼쳐졌다"는 표시 */}
+                    <ChevronRight
+                      className={`size-5 shrink-0 self-center transition ${
+                        isSelected
+                          ? "rotate-90 text-[#002045]"
+                          : "text-slate-300 group-hover:translate-x-0.5 group-hover:text-[#002045]"
+                      }`}
+                    />
                   </button>
+
+                  {/* ② 선택된 카드에만 보이는 "상세 보기" 링크 → /product/매물id */}
+                  {isSelected && (
+                    <div className="border-t border-slate-100 bg-[#f8f9ff] px-3 py-3">
+                      <Link
+                        href={`/product/${item.id}`}
+                        className="group/link flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#002045] text-sm font-semibold text-white shadow-md transition hover:bg-[#0b3c72]"
+                      >
+                        상세 보기
+                        <ArrowRight className="size-4 transition-transform group-hover/link:translate-x-1" />
+                      </Link>
+                    </div>
+                  )}
+                  </div>
                 </li>
               );
             })}
