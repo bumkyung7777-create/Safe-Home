@@ -2,7 +2,7 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer>
-      <div className=" py-8  px-10   max-w-[80.63rem] m-auto">
+      <div className=" py-8  px-5   max-w-[80.63rem] m-auto">
         <Link href="/">
           <img src="/bottomLogo.svg" alt="Logo" />
         </Link>

@@ -15,7 +15,7 @@ export type RoomWithMeta = Room & {
 export type RoomList = RoomWithMeta[];
 
 export type PropertyProps = {
-  roomType: Room[];
+  properties: PropertyRecord[];
 };
 
 // supabase-properties-table.sql 의 public.properties 테이블과 1:1로 맞춘 타입
@@ -43,6 +43,9 @@ export type PropertyRecord = {
   no_management_fee: boolean;
   included_items: string[];
   status: PropertyStatus;
+  // HUG(주택도시보증공사) / HF(한국주택금융공사) 보증 인증 여부
+  hug_mark: boolean;
+  hf_mark: boolean;
   created_at: string;
   updated_at: string;
 };

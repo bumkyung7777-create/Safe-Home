@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PropertyRecord } from "@/types/property";
 import { formatPrice } from "./home-types";
+import { BadgeCheck, ShieldCheck } from "lucide-react";
 
 const SORT_OPTIONS = {
   latest: "최신순",
@@ -115,6 +116,23 @@ export default function HomeList({
                   </div>
 
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-4">
+                    {/* HUG / HF 인증이 true인 매물만 체크 마크 표시 */}
+                    {(item.hug_mark || item.hf_mark) && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.hug_mark && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-[#006c4a]/10 px-2 py-0.5 text-[11px] font-bold text-[#006c4a]">
+                            <ShieldCheck className="size-3.5" />
+                            HUG 인증
+                          </span>
+                        )}
+                        {item.hf_mark && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-[#082d57]/10 px-2 py-0.5 text-[11px] font-bold text-[#082d57]">
+                            <BadgeCheck className="size-3.5" />
+                            HF 인증
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <p className="text-lg font-bold text-[#082d57]">
                       {item.deal_type && (
                         <span className="mr-1.5 text-[#006c4a]">
