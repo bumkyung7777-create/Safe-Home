@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PropertyRecord } from "@/types/property";
 import { formatPrice } from "./home-types";
-import { BadgeCheck, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, BadgeCheck, ShieldCheck } from "lucide-react";
 import HighlightText from "@/components/search/highlight-text";
 
 const SORT_OPTIONS = {
@@ -95,87 +96,111 @@ export default function HomeList({
                   itemRefs.current[item.id] = el;
                 }}
               >
-                <button
-                  type="button"
-                  onClick={() => onSelect(item.id)}
-                  className={`flex w-full overflow-hidden rounded-xl border bg-white text-left transition hover:shadow-md ${
+                {/* 카드 테두리는 바깥 div가 담당
+                    (button 안에 Link(a)를 넣을 수 없어서 둘을 형제로 나란히 둠) */}
+                <div
+                  className={`overflow-hidden rounded-xl border bg-white transition hover:shadow-md ${
                     isSelected
                       ? "border-[#006c4a] ring-2 ring-[#006c4a]/30"
                       : "border-slate-200"
                   }`}
                 >
-                  <div className="relative h-36 w-40 shrink-0 bg-slate-100 sm:w-56">
-                    {item.thumbnail_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.thumbnail_url}
-                        alt={item.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-gray-400">
-                        이미지 없음
-                      </div>
-                    )}
-                    <span className="absolute left-2 top-2 rounded-md bg-white/90 px-2 py-0.5 text-xs font-semibold text-[#082d57]">
-                      {item.building_type}
-                    </span>
-                  </div>
+                  {/* ① 카드 클릭 → 선택(지도 이동) + 아래에 "상세 보기" 열림 */}
+                  <button
+                    type="button"
+                    onClick={() => onSelect(item.id)}
+                    aria-expanded={isSelected}
+                    className="flex w-full text-left"
+                  >
+                    <div className="relative h-36 w-40 shrink-0 bg-slate-100 sm:w-56">
+                      {item.thumbnail_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.thumbnail_url}
+                          alt={item.title}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-gray-400">
+                          이미지 없음
+                        </div>
+                      )}
+                      <span className="absolute left-2 top-2 rounded-md bg-white/90 px-2 py-0.5 text-xs font-semibold text-[#082d57]">
+                        {item.building_type}
+                      </span>
+                    </div>
 
-                  <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-4">
-                    {/* HUG / HF 인증이 true인 매물만 체크 마크 표시 */}
-                    {(item.hug_mark || item.hf_mark) && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {item.hug_mark && (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-[#006c4a]/10 px-2 py-0.5 text-[11px] font-bold text-[#006c4a]">
-                            <ShieldCheck className="size-3.5" />
-                            HUG 인증
+                    <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-4">
+                      {/* HUG / HF 인증이 true인 매물만 체크 마크 표시 */}
+                      {(item.hug_mark || item.hf_mark) && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {item.hug_mark && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-[#006c4a]/10 px-2 py-0.5 text-[11px] font-bold text-[#006c4a]">
+                              <ShieldCheck className="size-3.5" />
+                              HUG 인증
+                            </span>
+                          )}
+                          {item.hf_mark && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-[#082d57]/10 px-2 py-0.5 text-[11px] font-bold text-[#082d57]">
+                              <BadgeCheck className="size-3.5" />
+                              HF 인증
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <p className="text-lg font-bold text-[#082d57]">
+                        {item.deal_type && (
+                          <span className="mr-1.5 text-[#006c4a]">
+                            {item.deal_type}
                           </span>
                         )}
-                        {item.hf_mark && (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-[#082d57]/10 px-2 py-0.5 text-[11px] font-bold text-[#082d57]">
-                            <BadgeCheck className="size-3.5" />
-                            HF 인증
-                          </span>
+                        {formatPrice(item.price)}
+                      </p>
+                      <p className="truncate font-medium text-slate-800">
+                        <HighlightText text={item.title} keyword={highlight} />
+                      </p>
+                      <p className="truncate text-sm text-slate-500">
+                        <HighlightText
+                          text={item.address}
+                          keyword={highlight}
+                        />
+                      </p>
+                      {/* 검색 중이고, 설명에 검색어가 들어 있을 때만 설명 한 줄 보여주기 */}
+                      {highlight &&
+                        item.description
+                          ?.toLowerCase()
+                          .includes(highlight.trim().toLowerCase()) && (
+                          <p className="line-clamp-1 text-sm text-slate-500">
+                            <HighlightText
+                              text={item.description}
+                              keyword={highlight}
+                            />
+                          </p>
                         )}
-                      </div>
-                    )}
-                    <p className="text-lg font-bold text-[#082d57]">
-                      {item.deal_type && (
-                        <span className="mr-1.5 text-[#006c4a]">
-                          {item.deal_type}
-                        </span>
-                      )}
-                      {formatPrice(item.price)}
-                    </p>
-                    <p className="truncate font-medium text-slate-800">
-                      <HighlightText text={item.title} keyword={highlight} />
-                    </p>
-                    <p className="truncate text-sm text-slate-500">
-                      <HighlightText text={item.address} keyword={highlight} />
-                    </p>
-                    {/* 검색 중이고, 설명에 검색어가 들어 있을 때만 설명 한 줄 보여주기 */}
-                    {highlight &&
-                      item.description
-                        ?.toLowerCase()
-                        .includes(highlight.trim().toLowerCase()) && (
-                        <p className="line-clamp-1 text-sm text-slate-500">
-                          <HighlightText
-                            text={item.description}
-                            keyword={highlight}
-                          />
-                        </p>
-                      )}
-                    <p className="text-sm text-slate-500">
-                      {item.current_floor != null &&
-                        `${item.current_floor}층${item.total_floor ? ` / ${item.total_floor}층` : ""}`}
-                      {item.no_management_fee
-                        ? " · 관리비 없음"
-                        : item.management_fee != null &&
-                          ` · 관리비 ${item.management_fee}만`}
-                    </p>
-                  </div>
-                </button>
+                      <p className="text-sm text-slate-500">
+                        {item.current_floor != null &&
+                          `${item.current_floor}층${item.total_floor ? ` / ${item.total_floor}층` : ""}`}
+                        {item.no_management_fee
+                          ? " · 관리비 없음"
+                          : item.management_fee != null &&
+                            ` · 관리비 ${item.management_fee}만`}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* ② 선택된 카드에만 보이는 "상세 보기" 링크 → /product/매물id */}
+                  {isSelected && (
+                    <div className="border-t border-slate-100 bg-[#f8f9ff] px-3 py-3">
+                      <Link
+                        href={`/product/${item.id}`}
+                        className="group/link flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#002045] text-sm font-semibold text-white shadow-md transition hover:bg-[#0b3c72]"
+                      >
+                        상세 보기
+                        <ArrowRight className="size-4 transition-transform group-hover/link:translate-x-1" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </li>
             );
           })}
