@@ -2,19 +2,21 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer>
-      <div className=" py-8  px-5   max-w-[80.63rem] m-auto">
+      <div className="m-auto max-w-[80.63rem] px-4 py-8 sm:px-5">
         <Link href="/">
           <img src="/bottomLogo.svg" alt="Logo" />
         </Link>
-        <div className="flex  flex items-center opacity-80 pt-4 text-xs justify-between">
+        {/* 모바일·태블릿: 세로(문구 위, 메뉴 아래) / lg(1024px) 이상: 가로 양쪽 정렬 */}
+        <div className="flex flex-col gap-4 pt-4 text-xs opacity-80 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-[#ffffff] text-[14px]">
+            <p className="text-[13px] text-[#ffffff] sm:text-[14px]">
               © 2024 SafeHome Institutional Real Estate. All rights reserved.
               <br />
               Verified status is subject to HUG/HF audit.
             </p>
           </div>
-          <ul className="flex gap-6 text-[#ffffff] text-[12px] ml-10">
+          {/* flex-wrap: 화면이 좁으면 메뉴가 다음 줄로 넘어가게 */}
+          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-[12px] text-[#ffffff] lg:ml-10">
             <li>
               <Link href="/about">About Us</Link>
             </li>

@@ -48,8 +48,9 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
 
   return (
     <div className="bg-[#f8f9ff]">
-      <ul className="flex max-w-[80.63rem] m-auto px-5 pt-5 pb-10 gap-6">
-        <li className="flex-1">
+      {/* 모바일·태블릿: 세로(지도 위, 목록 아래) / lg(1024px) 이상: 가로 2단 */}
+      <ul className="m-auto flex max-w-[80.63rem] flex-col gap-8 px-4 pb-10 pt-5 sm:px-5 lg:flex-row lg:gap-6">
+        <li className="h-[22rem] sm:h-[28rem] lg:h-auto lg:flex-1">
           {/* "금주의 검증된 매물" 제목(property.tsx)과 같은 스타일 */}
           <div className="flex h-10 items-center justify-between mb-6">
             <p className="flex items-center gap-[0.63rem]">
@@ -68,7 +69,7 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
             markers={markers}
           />
         </li>
-        <li className="flex-1">
+        <li className="min-w-0 lg:flex-1">
           <div className="flex h-10 items-center justify-between mb-6">
             <p className="text-base text-slate-500">
               총{" "}
@@ -84,7 +85,7 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
               <div className="hidden">{/* solt 메뉴 */}</div>
             </div>
           </div>
-          <ul className="flex h-[36.88rem] flex-col gap-4 overflow-y-auto p-1 pr-2">
+          <ul className="flex h-[30rem] flex-col gap-4 overflow-y-auto p-1 pr-2 sm:h-[34rem] lg:h-[36.88rem]">
             {properties.map((item) => {
               const isSelected = item.id === selectedId;
               return (
@@ -103,10 +104,10 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
                     type="button"
                     onClick={() => setSelectedId(item.id)}
                     aria-expanded={isSelected}
-                    className="group flex w-full gap-4 p-3 text-left"
+                    className="group flex w-full gap-3 p-3 text-left sm:gap-4"
                   >
                     {/* 썸네일 + 건물 유형 배지 */}
-                    <div className="relative h-28 w-36 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                    <div className="relative h-24 w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-28 sm:w-36">
                       {item.thumbnail_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -132,7 +133,7 @@ export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
                             {item.deal_type}
                           </span>
                         )}
-                        <span className="text-xl font-extrabold tracking-tight text-[#002045]">
+                        <span className="text-lg font-extrabold tracking-tight text-[#002045] sm:text-xl">
                           {formatPrice(item.price)}
                         </span>
                       </p>
