@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { PropertyRecord } from "@/types/property";
 import { formatPrice } from "./home-types";
 import { BadgeCheck, ShieldCheck } from "lucide-react";
+import HighlightText from "@/components/search/highlight-text";
 
 const SORT_OPTIONS = {
   latest: "최신순",
@@ -17,6 +18,10 @@ type HomeListProps = {
   isLoading: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  // (검색 페이지 전용) 이 글자를 제목·주소·설명에서 색칠해서 보여줌
+  highlight?: string;
+  // 결과가 없을 때 보여줄 문구 (안 넘기면 기본 문구)
+  emptyMessage?: string;
 };
 
 export default function HomeList({
@@ -24,6 +29,8 @@ export default function HomeList({
   isLoading,
   selectedId,
   onSelect,
+  highlight,
+  emptyMessage = "등록된 매물이 없어요.",
 }: HomeListProps) {
   const [sort, setSort] = useState<SortKey>("latest");
   const itemRefs = useRef<Record<string, HTMLLIElement | null>>({});
@@ -75,7 +82,7 @@ export default function HomeList({
         </p>
       ) : sorted.length === 0 ? (
         <p className="py-20 text-center text-sm text-gray-400">
-          등록된 매물이 없어요.
+          {emptyMessage}
         </p>
       ) : (
         <ul className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
@@ -142,11 +149,23 @@ export default function HomeList({
                       {formatPrice(item.price)}
                     </p>
                     <p className="truncate font-medium text-slate-800">
-                      {item.title}
+                      <HighlightText text={item.title} keyword={highlight} />
                     </p>
                     <p className="truncate text-sm text-slate-500">
-                      {item.address}
+                      <HighlightText text={item.address} keyword={highlight} />
                     </p>
+                    {/* 검색 중이고, 설명에 검색어가 들어 있을 때만 설명 한 줄 보여주기 */}
+                    {highlight &&
+                      item.description
+                        ?.toLowerCase()
+                        .includes(highlight.trim().toLowerCase()) && (
+                        <p className="line-clamp-1 text-sm text-slate-500">
+                          <HighlightText
+                            text={item.description}
+                            keyword={highlight}
+                          />
+                        </p>
+                      )}
                     <p className="text-sm text-slate-500">
                       {item.current_floor != null &&
                         `${item.current_floor}층${item.total_floor ? ` / ${item.total_floor}층` : ""}`}

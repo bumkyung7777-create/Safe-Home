@@ -15,8 +15,13 @@ export default function Header() {
     router.push("/");
   };
 
+  // 검색: 입력값을 주소(/search?q=검색어)에 실어서 검색 페이지로 이동
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // 폼 기본 동작(페이지 새로고침) 막기
+    const word = keyword.trim();
+    if (!word) return; // 빈 칸이면 아무것도 안 함
+    // encodeURIComponent: 한글·띄어쓰기를 주소에 넣을 수 있는 모양으로 변환
+    router.push(`/search?q=${encodeURIComponent(word)}`);
   };
 
   return (
