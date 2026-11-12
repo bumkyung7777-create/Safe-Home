@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import RoomType from "@/components/main/Room-type";
-import { fakeDate } from "@/app/service/fakeDate";
 import Property from "@/components/main/property";
 import KakaoMap from "./kakao-map";
 import { createClient } from "@/services/supabase/client";
@@ -27,7 +26,7 @@ export default function Home() {
     <>
       <RoomType />
       <Property properties={properties} />
-      <KakaoMap roomList={fakeDate} />
+      <KakaoMap />
     </>
   );
 }

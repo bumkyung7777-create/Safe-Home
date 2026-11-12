@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import type { RoomList } from "@/types/property";
 import KakaoMap from "@/components/kakaoMap";
 import { createClient } from "@/services/supabase/client";
 import type { PropertyRecord } from "@/types/property";
@@ -7,7 +6,7 @@ import { formatPrice } from "@/utils/price";
 import { ArrowRight, ChevronRight, MapPin } from "lucide-react";
 import Link from "next/link";
 
-export default function KakaoMapArea({ roomList }: { roomList: RoomList }) {
+export default function KakaoMapArea() {
   const [properties, setProperties] = useState<PropertyRecord[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const supabase = createClient();

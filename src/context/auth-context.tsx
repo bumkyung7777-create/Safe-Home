@@ -39,7 +39,10 @@ export function useUserProfile() {
 
   return {
     user,
-    role: (user?.user_metadata?.role as Role | undefined) ?? "landlord",
+    // 역할 정보가 없는 사용자(카카오·네이버 소셜 로그인)는 가장 권한이 적은 "세입자"로 처리
+    // → 기본값이 landlord면 소셜 가입만 해도 매물 등록 메뉴가 열려버림
+    //   (DB의 profiles 트리거도 기본값이 'tenant'라서 둘을 맞춤)
+    role: (user?.user_metadata?.role as Role | undefined) ?? "tenant",
     fullName: user?.user_metadata?.full_name ?? "사용자 이름",
     phone: (user?.user_metadata?.phone as string | undefined) ?? "010-0000-0000",
     createdAt: (user?.created_at ?? "2023-01-01").slice(0, 10),
