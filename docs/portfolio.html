@@ -7,7 +7,7 @@
   @page { size: A4; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; color: #1e293b; font-size: 10.5pt; line-height: 1.6; }
-  .page { width: 210mm; height: auto; padding: 16mm 16mm 14mm; position: relative; page-break-after: always; overflow: hidden; }
+  .page { width: 210mm; min-height: 297mm; padding: 16mm 16mm 14mm; position: relative; page-break-after: always; overflow: hidden; }
   .page:last-child { page-break-after: auto; }
   .navy { color: #082d57; } .green { color: #006c4a; }
   .eyebrow { font-size: 8.5pt; letter-spacing: .18em; font-weight: 700; color: #006c4a; }
@@ -20,19 +20,19 @@
   .hero .eyebrow { color: rgba(255,255,255,.7); }
   .hero h1 { color: #fff; }
   .hero p { color: rgba(255,255,255,.88); font-size: 11pt; }
-  .meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-top: 6mm; }
+  .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; margin-top: 6mm; }
   .meta div { background: rgba(255,255,255,.12); border-radius: 2.5mm; padding: 3mm 3.5mm; }
   .meta b { display: block; font-size: 8pt; color: rgba(255,255,255,.65); font-weight: 600; }
   .meta span { font-size: 10pt; font-weight: 700; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
   .card { border: 1px solid #e2e8f0; border-radius: 3mm; padding: 4.5mm 5mm; }
-  .card p { color: #475569; font-size: 9.5pt; }
+  .card p { color: #475569; font-size: 9.5pt; word-break: keep-all; }
   .quote { border-left: 1.2mm solid #006c4a; background: #f0f7f4; border-radius: 0 3mm 3mm 0; padding: 4mm 5mm; color: #334155; }
   .tags { display: flex; flex-wrap: wrap; gap: 2mm; }
   .tag { background: #f1f5f9; color: #082d57; border-radius: 1.5mm; padding: 1mm 2.5mm; font-size: 9pt; font-weight: 600; }
   .shot { border: 1.5px dashed #94a3b8; border-radius: 3mm; background: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 9pt; text-align: center; }
   .feature { display: grid; grid-template-columns: 100mm 1fr; gap: 5mm; margin-bottom: 5mm; align-items: center; }
-  .feature .shot { height: 60mm; }
+  .feature .shot { height: 43mm; }
   .feature .shot img { width: 100%; height: 100%; object-fit: cover; border-radius: 3mm; }
   .feature ul { padding-left: 4mm; color: #475569; font-size: 9.5pt; }
   table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
@@ -59,7 +59,7 @@
     <div class="meta">
       <div><b>개발 인원</b><span>1인 (기획~개발)</span></div>
       <div><b>역할</b><span>프론트엔드 전체</span></div>
-      <div><b>배포</b><span class="todo">[Vercel URL]</span></div>
+      <div><b>배포</b><span>https://safe-home-theta.vercel.app/</span></div>
     </div>
   </div>
 
@@ -183,14 +183,14 @@
   <section style="margin-top:7mm">
     <h2><span class="num">6</span>앞으로 개선할 점</h2>
     <div class="grid2">
-      <div class="card"><h3>기능</h3><p>찜하기 · 문의 기능 연결, 여러 단어 검색, 매물 승인/거부 관리 로직, 통계 실제 데이터 연동</p></div>
+      <div class="card"><h3>기능</h3><p> 매물 승인/거부 관리 로직, toss 연결 하여 회원 등급 관리, 관리자 페이지 구성</p></div>
       <div class="card"><h3>품질</h3><p>middleware로 페이지 접근 제어, 수정 시 이전 이미지 삭제, 테스트 코드 작성 <span class="todo">[추가]</span></p></div>
     </div>
   </section>
 
   <section>
     <div class="quote">
-      <b>GitHub</b> github.com/bumkyung7777-create/Safe-Home &nbsp;·&nbsp; <b>배포</b> <span class="todo">[Vercel URL]</span><br>
+      <b>GitHub</b> github.com/bumkyung7777-create/Safe-Home &nbsp;·&nbsp; <b>배포</b> <span>https://safe-home-theta.vercel.app/</span><br>
       <b>연락처</b> <span class="">[bumkyung77@naver.com / 010-4666-4385]</span>
     </div>
   </section>
