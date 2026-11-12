@@ -128,3 +128,32 @@ alter table public.properties add column if not exists detail_image_urls text[] 
 -- =========================================================
 alter table public.properties add column if not exists latitude double precision;
 alter table public.properties add column if not exists longitude double precision;
+
+-- =========================================================
+-- [찜하기] like 컬럼 + like만 바꿀 수 있는 함수
+-- like는 SQL 예약어라서 항상 큰따옴표("like")로 감싸야 함
+-- =========================================================
+alter table public.properties add column if not exists "like" boolean not null default false;
+
+-- RLS 때문에 매물 주인만 update 할 수 있어서, 다른 사람이 찜을 누르면 막힘
+-- → security definer 함수: "like 칸 하나만" 바꾸도록 제한해서 대신 실행해 줌
+--   (가격·제목 같은 다른 칸은 여전히 주인만 수정 가능)
+create or replace function public.set_property_like(p_id uuid, p_like boolean)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다';
+  end if;
+
+  update public.properties set "like" = p_like where id = p_id;
+  return p_like;
+end;
+$$;
+
+-- 로그인한 사람(authenticated)만 이 함수를 부를 수 있게
+revoke all on function public.set_property_like(uuid, boolean) from public, anon;
+grant execute on function public.set_property_like(uuid, boolean) to authenticated;

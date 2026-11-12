@@ -46,6 +46,7 @@ export type PropertyRecord = {
   // HUG(주택도시보증공사) / HF(한국주택금융공사) 보증 인증 여부
   hug_mark: boolean;
   hf_mark: boolean;
+  like: boolean; // 찜하기 여부 (SQL 예약어라 DB에서는 "like")
   created_at: string;
   updated_at: string;
 };

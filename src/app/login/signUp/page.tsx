@@ -1,7 +1,8 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useRef, useState } from "react";
 import { createClient } from "@/services/supabase/client";
 import { useRouter } from "next/navigation";
+import AlertPopup from "@/components/common/alert-popup";
 import {
   Building2,
   CheckCircle2,
@@ -36,11 +37,40 @@ const roles = [
   },
 ];
 
+type PopupState = { title: string; message: string } | null;
+
 export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false); // 약관 동의 체크 여부
+  const [popup, setPopup] = useState<PopupState>(null); // 알림 팝업 (null이면 닫힘)
+  // 팝업이 "약관 동의" 때문에 열렸는지 기억 → 닫을 때 체크박스로 포커스 이동
+  const focusAgreeOnClose = useRef(false);
+  const agreeRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  const closePopup = useCallback(() => {
+    setPopup(null);
+    if (focusAgreeOnClose.current) {
+      focusAgreeOnClose.current = false;
+      agreeRef.current?.focus();
+    }
+  }, []);
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isLoading) return; // 가입 처리 중에 버튼을 또 누르면 무시
+
+    // ① 약관 동의를 "먼저" 확인 → 안 했으면 Supabase에 요청 자체를 안 보냄
+    if (!agreed) {
+      focusAgreeOnClose.current = true;
+      setPopup({
+        title: "약관에 동의해 주세요",
+        message:
+          "회원가입을 하려면\n서비스 이용약관과 개인정보 처리방침에\n동의해야 해요.",
+      });
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const values = Object.fromEntries(formData);
     const supabase = createClient();
@@ -57,13 +87,11 @@ export default function SignUpPage() {
       },
     });
     setIsLoading(false);
-    if (!values.checkbox) {
-      alert("약관에 동의해주세요.");
-      return;
-    }
 
+    // ② 가입 실패(이미 가입된 이메일 등)도 팝업으로 알려주기
     if (error) {
       console.error("회원가입 실패", error.message);
+      setPopup({ title: "회원가입에 실패했어요", message: error.message });
       return;
     }
     router.push("/login");
@@ -217,6 +245,9 @@ export default function SignUpPage() {
               <input
                 type="checkbox"
                 name="checkbox"
+                ref={agreeRef}
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
                 className="mt-0.5 size-5 rounded border-[#9ca3af] accent-[#006c4a]"
               />
 
@@ -242,12 +273,20 @@ export default function SignUpPage() {
 
           <button
             type="submit"
+            disabled={isLoading}
             className="h-14 w-full rounded-lg bg-[#082d57] text-lg font-semibold text-white transition hover:bg-[#006c4a] active:scale-[0.99]"
           >
             {isLoading ? "가입 처리 중..." : "Create Account"}
           </button>
         </form>
       </section>
+
+      <AlertPopup
+        open={popup !== null}
+        title={popup?.title ?? ""}
+        message={popup?.message ?? ""}
+        onClose={closePopup}
+      />
     </main>
   );
 }

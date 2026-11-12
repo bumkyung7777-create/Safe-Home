@@ -115,11 +115,7 @@ export default function KakaoMap({
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        // 성공: 진짜 현재 위치로 교체
-        console.log("현재 위치 가져오기 성공:", {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
+        
         setCenter({
           lat: position.coords.latitude,
           lng: position.coords.longitude,

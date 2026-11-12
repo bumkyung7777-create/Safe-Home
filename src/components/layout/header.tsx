@@ -14,13 +14,15 @@ export default function Header() {
   const supabase = createClient();
   const router = useRouter();
 
-  // 집주인(landlord) 또는 공인중개사(realtor)만 "매물" 메뉴 표시
-  // → PC 메뉴와 모바일 사이드 메뉴가 같은 목록을 함께 사용
+  // PC 메뉴와 모바일 사이드 메뉴가 같은 목록을 함께 사용
+  // - 매물: 로그인 + 집주인(landlord) 또는 공인중개사(realtor)만
+  // - 내 정보: 로그인한 사람만
+  // - 시장: 누구나
   const menus: MenuItem[] = [
     ...(user && (role === "landlord" || role === "realtor")
       ? [{ href: "/join", label: "매물" }]
       : []),
-    { href: "/mypage", label: "내 정보" },
+    ...(user ? [{ href: "/mypage", label: "내 정보" }] : []),
     { href: "/home", label: "시장" },
   ];
 

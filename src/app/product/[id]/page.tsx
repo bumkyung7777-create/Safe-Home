@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
-import { BadgeCheck, Heart, MessageCircle, Share2, ShieldCheck } from "lucide-react";
+import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { createClient } from "@/services/supabase/server";
 import type { PropertyRecord } from "@/types/property";
 import { formatPrice } from "@/utils/price";
 import ProductGallery from "@/components/product/product-gallery";
 import ProductInfo from "@/components/product/product-info";
+import ProductActions from "@/components/product/product-actions";
 
 // 주소의 [id] 부분이 params.id 로 들어옴
 //   예) /product/abc-123  →  params.id === "abc-123"
@@ -101,30 +102,15 @@ export default async function ProductDetailPage({
 
             <div className="my-5 h-px bg-slate-200" />
 
-            {/* TODO: 찜하기 / 공유하기 / 문의하기 기능은 아직 연결 전 */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className="flex h-12 items-center justify-center gap-2 rounded-lg border border-[#002045] font-medium text-[#002045] transition hover:bg-[#002045]/5"
-              >
-                <Heart className="size-5" />
-                찜하기
-              </button>
-              <button
-                type="button"
-                className="flex h-12 items-center justify-center gap-2 rounded-lg border border-[#002045] font-medium text-[#002045] transition hover:bg-[#002045]/5"
-              >
-                <Share2 className="size-5" />
-                공유하기
-              </button>
-            </div>
-            <button
-              type="button"
-              className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-[#002045] text-lg font-semibold text-white transition hover:bg-[#0b3c72]"
-            >
-              <MessageCircle className="size-5" />
-              메시지로 문의하기
-            </button>
+            {/* 찜하기 · 공유하기 · 메시지 문의 (클릭이 필요해서 클라이언트 컴포넌트로 분리) */}
+            <ProductActions
+              propertyId={property.id}
+              title={property.title}
+              priceText={`${property.deal_type ? property.deal_type + " " : ""}${formatPrice(property.price)}`}
+              address={property.address}
+              imageUrl={images[0] ?? null}
+              initialLike={property.like ?? false}
+            />
           </aside>
         </div>
       </div>

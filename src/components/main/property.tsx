@@ -6,7 +6,17 @@ import type { PropertyProps } from "@/types/property";
 import { formatPrice } from "@/utils/price";
 import { MapPin } from "lucide-react";
 
+// loop(무한 반복)는 화면에 보이는 카드 수보다 슬라이드가 충분히 많아야 동작함
+// 카드 260px 기준 PC 한 화면에 약 4~5장 → 넉넉하게 8장 이상일 때만 loop 사용
+const LOOP_MIN_SLIDES = 8;
+
 export default function Property({ properties }: PropertyProps) {
+  // HUG 또는 HF 인증(true)이 하나라도 있는 매물만 노출
+  // 둘 다 인증된 매물만 보이게 하려면 || 를 && 로 바꾸면 됨
+  // → map 안에서 null을 반환하던 걸, 미리 걸러서 "실제 슬라이드 개수"를 알 수 있게 함
+  const verified = properties.filter((p) => p.hug_mark || p.hf_mark);
+  const canLoop = verified.length >= LOOP_MIN_SLIDES;
+
   return (
     <div className="bg-[#f8f9ff]">
       <div className="max-w-[80.63rem] m-auto px-5 pt-5 pb-10">
@@ -20,18 +30,17 @@ export default function Property({ properties }: PropertyProps) {
         </p>
         <div className="swiper-container mt-3">
           <Swiper
+            // key: 슬라이드 개수·loop 여부가 바뀌면 Swiper를 새로 만들기
+            // (매물은 처음엔 0개였다가 Supabase에서 받아온 뒤 채워지기 때문)
+            key={`${verified.length}-${canLoop}`}
             className="property-swiper"
-            loop={true}
+            loop={canLoop}
             spaceBetween={10}
             slidesPerView="auto"
             navigation={true}
             autoplay={true}
           >
-            {properties.map((slide) => {
-              // HUG 또는 HF 인증(true)이 하나라도 있는 매물만 노출
-              // 둘 다 인증된 매물만 보이게 하려면 || 를 && 로 바꾸면 됨
-              if (!(slide.hug_mark || slide.hf_mark)) return null;
-
+            {verified.map((slide) => {
               const label =
                 slide.hug_mark && slide.hf_mark
                   ? "HUG · HF verified"

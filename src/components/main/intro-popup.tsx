@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Download, ExternalLink, FileText, X } from "lucide-react";
+import Portal from "@/components/common/portal";
 
 // localStorage에 저장할 이름과 PDF 경로
 const HIDE_KEY = "safe-home:intro-hide-until";
@@ -84,99 +85,105 @@ export default function IntroPopup() {
       )}
 
       {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onClick={handleDimClick}
-        >
+        <Portal>
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="intro-popup-title"
-            className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4"
+            onClick={handleDimClick}
           >
-            {/* 상단 컬러 영역 */}
-            <div className="bg-gradient-to-br from-[#082d57] to-[#006c4a] px-6 pb-6 pt-8 text-white">
-              <p className="text-xs font-semibold tracking-widest text-white/70">
-                PORTFOLIO PROJECT
-              </p>
-              <h2
-                id="intro-popup-title"
-                className="mt-2 text-2xl font-bold leading-snug"
-              >
-                전세사기 걱정 없는
-                <br />
-                안전 매물 플랫폼, Safe Home
-              </h2>
-              <button
-                ref={closeButtonRef}
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="팝업 닫기"
-                className="absolute right-4 top-4 rounded-full p-1.5 text-white/80 transition hover:bg-white/15 hover:text-white"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="intro-popup-title"
+              className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+            >
+              {/* 상단 컬러 영역 */}
+              <div className="bg-gradient-to-br from-[#082d57] to-[#006c4a] px-6 pb-6 pt-8 text-white">
+                <p className="text-xs font-semibold tracking-widest text-white/70">
+                  PORTFOLIO PROJECT
+                </p>
+                <h2
+                  id="intro-popup-title"
+                  className="mt-2 text-2xl font-bold leading-snug"
+                >
+                  전세사기 걱정 없는
+                  <br />
+                  안전 매물 플랫폼, Safe Home
+                </h2>
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="팝업 닫기"
+                  className="absolute right-4 top-4 rounded-full p-1.5 text-white/80 transition hover:bg-white/15 hover:text-white"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
 
-            <div className="space-y-5 px-6 py-6">
-              <p className="text-sm leading-relaxed text-slate-600">
-                HUG · HF 인증 매물을 지도와 목록으로 한눈에 비교하는 부동산
-                서비스예요. 기획 의도, 주요 기능, 기술 스택, 트러블슈팅을
-                PDF에 정리했어요.
-              </p>
+              <div className="space-y-5 px-6 py-6">
+                <p className="text-sm leading-relaxed text-slate-600">
+                  HUG · HF 인증 매물을 지도와 목록으로 한눈에 비교하는 부동산
+                  서비스예요. 기획 의도, 주요 기능, 기술 스택, 트러블슈팅을
+                  PDF에 정리했어요.
+                </p>
 
-              <ul className="flex flex-wrap gap-1.5">
-                {["Next.js 14", "TypeScript", "Supabase", "Kakao Map", "Tailwind"].map(
-                  (tech) => (
+                <ul className="flex flex-wrap gap-1.5">
+                  {[
+                    "Next.js 14",
+                    "TypeScript",
+                    "Supabase",
+                    "Kakao Map",
+                    "Tailwind",
+                  ].map((tech) => (
                     <li
                       key={tech}
                       className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-[#082d57]"
                     >
                       {tech}
                     </li>
-                  ),
-                )}
-              </ul>
+                  ))}
+                </ul>
 
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <a
-                  href={PDF_PATH}
-                  download="safe-home-portfolio.pdf"
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#006c4a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#00573c]"
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <a
+                    href={PDF_PATH}
+                    download="safe-home-portfolio.pdf"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#006c4a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#00573c]"
+                  >
+                    <Download className="size-4" />
+                    소개서 PDF 받기
+                  </a>
+                  <a
+                    href={GITHUB_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-[#082d57] transition hover:bg-slate-50"
+                  >
+                    <ExternalLink className="size-4" />
+                    GitHub 보기
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-6 py-3 text-sm">
+                <button
+                  type="button"
+                  onClick={handleHideToday}
+                  className="text-slate-500 hover:text-slate-800"
                 >
-                  <Download className="size-4" />
-                  소개서 PDF 받기
-                </a>
-                <a
-                  href={GITHUB_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-[#082d57] transition hover:bg-slate-50"
+                  오늘 하루 보지 않기
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="font-semibold text-[#082d57]"
                 >
-                  <ExternalLink className="size-4" />
-                  GitHub 보기
-                </a>
+                  닫기
+                </button>
               </div>
             </div>
-
-            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-6 py-3 text-sm">
-              <button
-                type="button"
-                onClick={handleHideToday}
-                className="text-slate-500 hover:text-slate-800"
-              >
-                오늘 하루 보지 않기
-              </button>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="font-semibold text-[#082d57]"
-              >
-                닫기
-              </button>
-            </div>
           </div>
-        </div>
+        </Portal>
       )}
     </>
   );

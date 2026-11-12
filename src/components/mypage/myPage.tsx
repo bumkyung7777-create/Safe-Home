@@ -20,19 +20,7 @@ export default function MyPage() {
         {/* 멤버십 등급 & 라벨링 현황 */}
         <MembershipStatus />
 
-        {/* 좌: 계정 관리 / 우: 매물 관리 */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* 좌측 컬럼 비밀번호 변경 */}
-          <PasswordChangeForm />
-          {/* 우측 컬럼 */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
-            {/* KPI */}
-            <MypageState />
-
-            {/* 매물 관리 */}
-            <StatCard />
-          </div>
-        </section>
+        
       </div>
     </div>
   );
